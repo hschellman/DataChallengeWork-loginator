@@ -83,7 +83,23 @@ class DDInterface:
   def next_file(self):
     self.next_output = self.dd_client.next_file(self.proj_id,
                                                 timeout=self.dd_timeout)
-    
+  @call_and_retry
+  def file_done(self, did):
+    #self.dd_client.file_done(self.proj_id, '%s:%s'%(j['namespace'], j['name']))
+    self.dd_client.file_done(self.proj_id, did)
+
+  @call_and_retry
+  def file_failed(self, did, do_retry=True):
+    self.dd_client.file_failed(
+        self.proj_id, did,
+        #'%s:%s'%(self.next_output['namespace'], self.next_output['name']),
+        retry=do_retry)
+
+  @call_and_retry
+  def get_project(self, proj_id):
+    proj = self.dd_client.get_project(proj_id, with_files=False)
+    return proj
+
   def LoadFiles(self):
     count = 0
     ##Should we take out the proj_state clause?
@@ -139,7 +155,7 @@ class DDInterface:
           self.n_waited = 0
         else:
           print('Empty replicas -- marking as failed')
-          nretries = 0
+          '''nretries = 0
           while nretries < 5:
             try:
               self.dd_client.file_failed(self.proj_id, '%s:%s'%(self.next_output['namespace'], self.next_output['name']), retry=False)
@@ -152,7 +168,10 @@ class DDInterface:
               nretries += 1
           if nretries > 4:
             print('Too many retries')
-            sys.exit(1)
+            sys.exit(1)'''
+          self.file_failed(
+              '%s:%s'%(self.next_output['namespace'], self.next_output['name']),
+              do_retry=False)
     self.loaded = True
     print("Loaded %i files. Moving on."%len(self.loaded_files))
 
@@ -187,9 +206,15 @@ class DDInterface:
 
   def MarkFiles(self, failed=False):
     state = 'failed' if failed else 'done'
-    nretries = 0
+    #nretries = 0
     for j in self.loaded_files:
-      while nretries < 5:
+      if failed:
+        print('Marking failed')
+        self.file_failed('%s:%s'%(j['namespace'], j['name']))
+      else:
+        print('Marking done')
+        self.file_done('%s:%s'%(j['namespace'], j['name']))
+      '''while nretries < 5:
         try:
           if failed:
             print('Marking failed')
@@ -207,7 +232,7 @@ class DDInterface:
           nretries += 1
       if nretries > 4:
         print('Too many retries')
-        sys.exit(1)
+        sys.exit(1)'''
 
   def SaveFileDIDs(self):
     lines = []
@@ -223,7 +248,8 @@ class DDInterface:
 
   def AttachProject(self, proj_id):
     self.proj_id = proj_id
-    proj = self.dd_client.get_project(proj_id, with_files=False)
+    #proj = self.dd_client.get_project(proj_id, with_files=False)
+    proj = self.get_project(proj_id)
     if proj == None:
       self.proj_exists = False
     else:
