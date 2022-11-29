@@ -117,6 +117,13 @@ pip install datadispatcher
 #source ${CONDOR_DIR_INPUT}/${MC_TAR}/canned_client_setup.sh
 #source ${CONDOR_DIR_INPUT}/${DD_TAR}/canned_client_setup.sh
 
+sleeptime=$[ ( $RANDOM % 120 ) ]
+echo "Will sleep for ${sleeptime} seconds"
+sleep $sleeptime
+
+export MYWORKERID=`ddisp worker id -n`
+echo "workerid: ${MYWORKERID}"
+
 python -m run_lar \
   --namespace $NAMESPACE \
   --fcl $FCL \
@@ -165,8 +172,17 @@ export METACAT_SERVER_URL=https://metacat.fnal.gov:9443/dune_meta_demo/app
 
 echo "Authenticating" #>> ${logname}.out 2>>${logname}.err
 metacat auth login -m x509 ${METACATUSER} # >> ${logname}.out 2>>${logname}.err
+date
+
+auth_return=$?
+if [ $auth_return -ne 0 ]; then
+  echo "could not declare to metacat"
+  exit $auth_return
+fi
+
 echo "whoami:" #>> ${logname}.out 2>>${logname}.err
 metacat auth whoami #>> ${logname}.out 2>>${logname}.err
+date
 
 
 parents=`cat loaded_files.txt`
@@ -195,6 +211,12 @@ for i in *$OUTPUT; do
 EOF
 
   metacat file declare -j ${i}.json $OUTPUTNAMESPACE:$OUTPUTDATASET-data #>> ${logname}.out 2>>${logname}.err
+  date
+  returncode=$?
+  if [ $returncode -ne 0 ]; then
+    echo "could not declare to metacat"
+    exit $returncode
+  fi
 
   for rse in ${output_rses[@]}; do
     echo "Uploading to $rse"
