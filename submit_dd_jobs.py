@@ -48,7 +48,7 @@ if __name__ == '__main__':
     print(query)
     #query metacat
     query_files = [i for i in mc_client.query(query)]
-    print(query_files)
+    #print(query_files)
     
     #check size
     nfiles_in_dataset = len(query_files)
