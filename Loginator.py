@@ -86,6 +86,7 @@ class Loginator:
 ## read in the log file and parse it, add the info
     def readme(self):
         object = {}
+        memdata = None
         for line in self.logfile:
             tag = self.findme(line)
             if DEBUG: print (tag,line)
@@ -99,32 +100,36 @@ class Loginator:
                 filepath = os.path.dirname(filefull).strip()
                 dups = 0
                 if "Opened" in tag:
+                    localobject = {}
                     if DEBUG: print ("filename was",filename,line)
-                    if filename in object.keys():
-                        print (" I HAVE ALREADY SEEN ",filename)
-                    object[filename] = self.template
-                    object[filename]["timestamp_for_start"] = timestamp
+            
+                    localobject = self.template.copy()
+                    localobject["timestamp_for_start"] = timestamp
                     start = timestamp
-                    object[filename]["path"]=filepath
-                    object[filename]["file_name"] = filename
+                    localobject["path"]=filepath
+                    localobject["file_name"] = filename
                     if DEBUG: print ("filepath",filepath)
                     if "root" in filepath[0:10]:
                         if DEBUG: print ("I am root")
                         tmp = filepath.split("//")
-                        object[filename]["source_rse"] = tmp[1]
-                        object[filename]["deliver_method"] = "xroot"
+                        localobject["source_rse"] = tmp[1]
+                        localobject["deliver_method"] = "xroot"
                     for thing in self.info:
-                        object[filename][thing] = self.info[thing]
-                    object[filename]["final_state"] = "Opened"
+                        localobject[thing] = self.info[thing]
+                    localobject["final_state"] = "Opened"
                 if "Closed" in tag:
-                    object[filename]["timestamp_for_end"] = timestamp
-                    object[filename]["duration"]=self.duration(start,timestamp)
-                    object[filename]["final_state"] = "Closed"
+                    localobject["timestamp_for_end"] = timestamp
+                    localobject["duration"]=self.duration(start,timestamp)
+                    localobject["final_state"] = "Closed"
+                object[filename] = localobject
                 continue
             if "size usage" in tag:
-                data = line.split(":")
-                for thing in object:
-                    object[thing]["real_memory"]=data[1].strip()
+                memdata = line.split(":")
+                #print ("mem",memdata,filename)
+        # add the memory info if available
+        for thing in object:
+            if memdata != None: object[thing]["real_memory"]=memdata[1].strip()
+            #print ("mem",object[thing]["real_memory"])
         self.outobject=object
 
     def addinfo(self,info):
