@@ -9,6 +9,8 @@ import requests
 from data_dispatcher.api import DataDispatcherClient
 from data_dispatcher.api import APIError
 
+import Loginator
+
 def call_and_retry(func):
   def inner1(*args, **kwargs):
     nretries = 0
@@ -231,6 +233,9 @@ class DDInterface:
     with open('loaded_files.txt', 'w') as f:
       f.writelines(lines)
 
+  def SetWorkerID(self):
+    os.environ['MYWORKERID'] = self.dd_client.new_worker_id()
+
   def AttachProject(self, proj_id):
     self.proj_id = proj_id
     #proj = self.dd_client.get_project(proj_id, with_files=False)
@@ -270,7 +275,20 @@ class DDInterface:
     else:
       cluster = '0'
       process = '0'
-    proc = subprocess.run('lar -c %s -s %s -n %i --nskip %i -o "dc4_hd_protodune_%%tc_%s_%s_reco.root"'%(fcl, self.lar_file_list, n, nskip, cluster, process), shell=True)
+    ## TODO -- make options for capturing output
+    fname = "dc4_hd_protodune_%s_%s_reco.root"%(cluster, process)
+    oname = fname.replace(".root",".out")
+    ename = fname.replace(".root",".err")
+    ofile = open(oname,'w')
+    efile = open(ename,'w')
+    proc = subprocess.run('lar -c %s -s %s -n %i --nskip %i -o fname'%(fcl, self.lar_file_list, n, nskip), shell=True, stdout=ofile,stderr=efile)
+    ofile.close()
+    efile.close()
+    logparse = Loginator.Loginator(oname)
+    logparse.readme()
+    logparse.addinfo(logparse.getinfo())
+    logparse.addmetacatinfo(self.namespace)  #HMS assuming this is the input namespace.
+    logparse.writeme()
     if proc.returncode != 0:
       self.MarkFiles(True)
       sys.exit(proc.returncode)

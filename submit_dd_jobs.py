@@ -6,6 +6,35 @@ from data_dispatcher.api import DataDispatcherClient
 from argparse import ArgumentParser as ap
 import subprocess
 
+def create_project(dataset, namespace, query_limit=None, query_skip=None):
+  mc_client = MetaCatClient('https://metacat.fnal.gov:9443/dune_meta_demo/app')
+  dd_client = DataDispatcherClient(
+    server_url='https://metacat.fnal.gov:9443/dune/dd/data',
+    auth_server_url='https://metacat.fnal.gov:8143/auth/dune')
+  dd_client.login_x509(os.environ['USER'],
+                       os.environ['X509_USER_PROXY'])
+  
+  query = 'files from %s where namespace="%s" ordered'%(dataset, namespace)
+  if query_skip: query += ' skip %s'%query_skip
+  if query_limit: query += ' limit %s'%query_limit
+  print(query)
+  #query metacat
+  query_files = [i for i in mc_client.query(query)]
+  #print(query_files)
+  
+  #check size
+  nfiles_in_dataset = len(query_files)
+  if nfiles_in_dataset == 0:
+    sys.stderr.write("Ignoring launch request on empty metacat query")
+    sys.stderr.write("Query: %s"%query)
+    sys.exit(1)
+  
+  #make project in data dispatcher
+  proj_dict = dd_client.create_project(query_files, query=query)
+  dd_proj_id = proj_dict['project_id']
+  print('Project ID:', dd_proj_id)
+
+  return dd_proj_id
 
 
 
