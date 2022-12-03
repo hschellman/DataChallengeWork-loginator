@@ -1,5 +1,5 @@
 import submit_dd_jobs
-from run_lar import DDInterface 
+from run_lar import DDInterface
 import sys
 import os
 from argparse import ArgumentParser as ap
@@ -8,6 +8,9 @@ if __name__ == '__main__':
 
   parser = ap()
   parser.add_argument('--namespace', type=str)
+  parser.add_argument('--appFamily', type=str)
+  parser.add_argument('--appVersion', type=str)
+  parser.add_argument('--appName', type=str)
   parser.add_argument('--dataset', type=str)
   parser.add_argument('--fcl', type=str)
   parser.add_argument('--load_limit', type=int)
@@ -21,6 +24,21 @@ if __name__ == '__main__':
   parser.add_argument('-n', type=int, default=-1)
   parser.add_argument('--nskip', type=int, default=0)
   args = parser.parse_args()
+
+  if args.appName == None:
+      appName = args.fcl.replace(".fcl","")
+  else:
+      appName = args.appName
+
+  if args.appVersion == None:
+      appVersion = os.getenv("DUNESW_VERSION")
+  else:
+      appVersion = args.appVersion
+      
+  if args.appFamily == None:
+      appFamily = "LArSoft"
+  else:
+      appFamily = args.appFamily
 
   if (not args.project) and args.dataset and args.namespace:
     dd_proj_id = submit_dd_jobs.create_project(namespace=args.namespace,
@@ -39,7 +57,10 @@ if __name__ == '__main__':
                              args.load_limit,
                              timeout=args.timeout,
                              wait_time=args.wait_time,
-                             wait_limit=args.wait_limit)
+                             wait_limit=args.wait_limit,
+                             appFamily=appFamily,
+                             appName=appName,
+                             appVersion=appVersion)
   dd_interface.Login(args.user)
   dd_interface.SetWorkerID()
   print(os.environ['MYWORKERID'])
@@ -49,4 +70,3 @@ if __name__ == '__main__':
   dd_interface.RunLAr(args.fcl, args.n, args.nskip)
 
   ##Loginator stuff here?
- 

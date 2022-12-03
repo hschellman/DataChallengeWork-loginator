@@ -49,21 +49,23 @@ def call_and_retry_return(func):
   return inner1
 
 class DDInterface:
-  def __init__(self, namespace, lar_limit, timeout=120, wait_time=60, wait_limit=5):
+  def __init__(self, namespace, lar_limit, timeout=120, wait_time=60, wait_limit=5, appFamily=None, appName=None, appVersion=None):
     self.dataset = "" #dataset
     self.limit = 1#limit
     self.namespace = namespace
     query_args = (self.dataset, self.namespace, self.limit)
     self.query = '''files from %s where namespace="%s" limit %i'''%query_args
+    print ("the query is:",self.query)
     self.worker_timeout = 3600*5
     self.lar_limit = lar_limit
     self.proj_id = -1
     self.proj_exists = False
     self.proj_state = None
-    self.loaded_files = []
+    self.loaded_files = [] # list of files with all the replicas for worker to choose from
+    self.input_replicas = []  # list of the replicas actually sent to Lar
     self.loaded_file_uris = []
     self.loaded = False
-    self.dd_timeout = timeout 
+    self.dd_timeout = timeout
     self.wait_time = wait_time
     self.max_wait_attempts = wait_limit
     self.hit_timeout = False
@@ -72,6 +74,9 @@ class DDInterface:
     self.n_waited = 0
     self.next_failed = False
     self.next_replicas = []
+    self.appFamily = appFamily
+    self.appName = appName
+    self.appVersion = appVersion
 
     self.retry_time = 600
 
@@ -132,6 +137,7 @@ class DDInterface:
   @call_and_retry_return
   def get_project(self, proj_id):
     proj = self.dd_client.get_project(proj_id, with_files=False)
+    print (proj)
     #print(datetime.datetime.now())
     return proj
 
@@ -144,7 +150,7 @@ class DDInterface:
       self.Next()
       if self.next_output == None:
         ## this shouldn't happen, but if it does just exit the loop
-        break 
+        break
       elif self.next_output == True:
         ##this means the fetch timed out.
 
@@ -163,8 +169,8 @@ class DDInterface:
         if count > 0:
           print('data dispatcher next_file timed out. This job has at least one file reserved. Will continue.')
           break
-        else: 
-          ##We know we have externally-reserved files. 
+        else:
+          ##We know we have externally-reserved files.
           ##try waiting a user-defined amount of time
           ##for a maximum number of attempts
           ##-- if at max, go on to loop
@@ -176,7 +182,7 @@ class DDInterface:
           else:
             print("Hit max wait limit. Ending attempts to load files")
             break
-      elif self.next_output == False: 
+      elif self.next_output == False:
         ##this means the project is done -- just exit the loop.
         print("Project is done -- exiting file fetch loop")
         break
@@ -226,9 +232,9 @@ class DDInterface:
     for i in range(len(self.loaded_files)):
       f = self.loaded_files[i]
       if i < len(self.loaded_files)-1:
-        lines.append('{"did":"%s:%s"},\n'%(f['namespace'], f['name'])) 
+        lines.append('{"did":"%s:%s"},\n'%(f['namespace'], f['name']))
       else:
-        lines.append('{"did":"%s:%s"}\n'%(f['namespace'], f['name'])) 
+        lines.append('{"did":"%s:%s"}\n'%(f['namespace'], f['name']))
 
     with open('loaded_files.txt', 'w') as f:
       f.writelines(lines)
@@ -253,6 +259,7 @@ class DDInterface:
       if len(replicas) > 0:
         #Get the first replica
         replica = replicas[0]
+        self.input_replicas.append(replica)
         print('Replica:', replica)
         uri = replica['url']
         if 'https://eospublic.cern.ch/e' in uri: uri = uri.replace('https://eospublic.cern.ch/e', 'xroot://eospublic.cern.ch//e')
@@ -260,7 +267,7 @@ class DDInterface:
         self.lar_file_list += ' '
       else:
         print('Empty replicas -- marking as failed')
-        
+
         ##TODO -- pop entry
         self.dd_client.file_failed(self.proj_id, '%s:%s'%(j['namespace'], j['name']))
         print(datetime.datetime.now())
@@ -276,18 +283,27 @@ class DDInterface:
       cluster = '0'
       process = '0'
     ## TODO -- make options for capturing output
-    fname = "dc4_hd_protodune_%s_%s_reco.root"%(cluster, process)
-    oname = fname.replace(".root",".out")
-    ename = fname.replace(".root",".err")
+    datetime.datetime.now().strftime("%Y%m%d%h%M%S%Z")
+    fname = "dc4_hd_protodune_%%tc_%s_%s_reco.root"%(cluster, process)
+    oname = fname.replace(".root",".out").replace("%tc",stamp)
+    ename = fname.replace(".root",".err").replace("%tc",stamp)
     ofile = open(oname,'w')
     efile = open(ename,'w')
     proc = subprocess.run('lar -c %s -s %s -n %i --nskip %i -o fname'%(fcl, self.lar_file_list, n, nskip), shell=True, stdout=ofile,stderr=efile)
     ofile.close()
     efile.close()
+
+    # get log info, match with replicas
     logparse = Loginator.Loginator(oname)
+    # parse the log and find open./close/memory
     logparse.readme()
-    logparse.addinfo(logparse.getinfo())
-    logparse.addmetacatinfo(self.namespace)  #HMS assuming this is the input namespace.
+    #logparse.addinfo(logparse.getinfo())
+    logparse.addinfo({"application_family":self.appFamily,"application_name":self.appName,
+    "application_version":self.appVersion,"delivery_method":"dd","workflow_method":"dd","project_id":self.proj_id})
+    unused_replicas = logparse.addreplicainfo(self.input_replicas)
+    logparse.addmetacatinfo(self.namespace) # only uses namespace if can't get from replica info
+    print ("replicas not used",unused_replicas)
+    # write out json files for processed files whether closed properly or not.  Those never opened don't get logged.
     logparse.writeme()
     if proc.returncode != 0:
       self.MarkFiles(True)
@@ -300,6 +316,9 @@ if __name__ == '__main__':
 
   parser = ap()
   parser.add_argument('--namespace', type=str)
+  parser.add_argument('--appFamily', type=str)
+  parser.add_argument('--appName', type=str)
+  parser.add_argument('--appVersion', type=str)
   parser.add_argument('--fcl', type=str)
   parser.add_argument('--load_limit', type=int)
   parser.add_argument('--user', type=str)
@@ -315,11 +334,13 @@ if __name__ == '__main__':
                              args.load_limit,
                              timeout=args.timeout,
                              wait_time=args.wait_time,
-                             wait_limit=args.wait_limit)
+                             wait_limit=args.wait_limit,
+                             appFamily=args.appFamily,
+                             appName=args.appName,
+                             appVersion=args.appVersion
+                             )
   dd_interface.Login(args.user)
   dd_interface.AttachProject(args.project)
   dd_interface.LoadFiles()
   dd_interface.BuildFileListString()
   dd_interface.RunLAr(args.fcl, args.n, args.nskip)
-
-

@@ -11,7 +11,10 @@
 # @file Loginator.py
 
 import string,time,datetime,json,os,sys
-import samweb_client
+if "SAM_EXPERIMENT" in os.environ:
+    import samweb_client
+
+
 from metacat.webapi import MetaCatClient
 import string,datetime#,dateutil
 from datetime import date,timezone,datetime
@@ -29,8 +32,8 @@ class Loginator:
         self.logname = logname
         self.logfile = open(logname,'r')
         self.outobject ={}
-        self.info = self.getinfo()
-        self.tags = ["Opened input file", "Closed input file","Peak resident set size usage (VmHWM)"]
+        self.info = self.getsysinfo()
+        self.tags = ["Opened input file", "Closed input file","VmHWM"]
         self.template = {
             "source_rse":None,  #
             "user":None,  # (who's request is this)
@@ -43,7 +46,6 @@ class Loginator:
             "application_name":None,  #
             "application_version":None,  #
             "final_state":None,  # (what happened?)
-            "cpu_site":None,  # (e.g. FNAL":None,  # RAL)
             "project_name":None, #(wkf request_id?)"
             "file_name":None,  # (not including the metacat namespace)
             "fid":None, # metacat fid
@@ -73,11 +75,13 @@ class Loginator:
         return None
 
 ## get system info for the full job
-    def getinfo(self):
+    def getsysinfo(self):
         info = {}
         # get a bunch of system thingies.
-        info["application_version"]=os.getenv("DUNESW_VERSION")
-        info["user"]=os.getenv("GRID_USER")
+        if os.getenv("GRID_USER") != None:
+            info["user"]=os.getenv("GRID_USER")
+        else:
+            info["user"]=os.getenv("USER")
         info["job_node"] = os.getenv("HOST")
         info["job_site"] = os.getenv("GLIDEIN_DUNESite")
         #info["POMSINFO"] = os.getenv("poms_data")  # need to parse this further
@@ -92,6 +96,8 @@ class Loginator:
             if DEBUG: print (tag,line)
             if tag == None:
                 continue
+            if "VmHWM" == tag:
+                memdata = line.split("VmHWM = ")[1].strip()
             if "file" in tag:
                 data = line.split(tag)
                 filefull = data[1].strip().replace('"','')
@@ -102,7 +108,7 @@ class Loginator:
                 if "Opened" in tag:
                     localobject = {}
                     if DEBUG: print ("filename was",filename,line)
-            
+
                     localobject = self.template.copy()
                     localobject["timestamp_for_start"] = timestamp
                     start = timestamp
@@ -123,12 +129,11 @@ class Loginator:
                     localobject["final_state"] = "Closed"
                 object[filename] = localobject
                 continue
-            if "size usage" in tag:
-                memdata = line.split(":")
+
                 #print ("mem",memdata,filename)
         # add the memory info if available
         for thing in object:
-            if memdata != None: object[thing]["real_memory"]=memdata[1].strip()
+            if memdata != None: object[thing]["real_memory"]=memdata
             #print ("mem",object[thing]["real_memory"])
         self.outobject=object
 
@@ -154,12 +159,24 @@ class Loginator:
                 self.outobject[f]["run_type"] = run[2]
                 break
 
-    def addmetacatinfo(self,namespace):
+    def addmetacatinfo(self,defaultNamespace=None):
         os.environ["METACAT_SERVER_URL"]="https://metacat.fnal.gov:9443/dune_meta_demo/app"
         mc_client = MetaCatClient('https://metacat.fnal.gov:9443/dune_meta_demo/app')
         for f in self.outobject:
+            if "namespace" in self.outobject[f] and self.outobject[f]["namespace"] != None:
+                namespace = self.outobject[f]["namespace"]
+            else:
+                print ("set default namespace for file",f,defaultNamespace)
+                namespace = defaultNamespace
+                if namespace == None:
+                    print (" could not set namespace for",f)
+                    continue
+            print (f,namespace)
             meta = mc_client.get_file(name=f,namespace=namespace)
-            if DEBUG: print ("metacat answer",f,meta.keys())
+            print ("metacat answer",f,namespace)
+            if meta == None:
+                print ("no metadata for",f)
+                continue
             self.outobject[f]["access_method"]="metacat"
             for item in ["data_tier","file_type","data_stream","run_type"]:
                 if "core."+item in meta["metadata"].keys():
@@ -170,10 +187,30 @@ class Loginator:
             self.outobject[f]["fid"]=meta["fid"]
             self.outobject[f]["namespace"]=namespace
 
+    def addreplicainfo(self,replicas,test=False):
+        notfound = []
+        for f in self.outobject:
+            self.outobject[f]["rse"] = None
+
+        for r in replicas:
+            found = False
+            for f in self.outobject:
+                if f == r["name"]:
+                    print ("replica match",r)
+                    found = True
+                    if "rse" in r:
+                        self.outobject[f]["rse"] = r["rse"]
+                    if "namespace" in r:
+                        self.outobject[f]["namespace"] = r["namespace"]
+                print (self.outobject[f])
+            if not found:
+                notfound.append(r)
+
+        return notfound
 
 
-    def metacatinfo(self,namespace,filename):
-        print ("do something here")
+#    def metacatinfo(self,namespace,filename):
+#        print ("do something here")
 
 
     def writeme(self):
@@ -221,9 +258,10 @@ def test():
     parse = Loginator(sys.argv[1])
     print ("looking at",sys.argv[1])
     parse.readme()
-    parse.addinfo(parse.getinfo())
+    parse.addinfo(parse.getsysinfo())
    # parse.addsaminfo()
-    parse.addmetacatinfo("pdsp_mc_reco")
+    parse.addreplicainfo([])
+    parse.addmetacatinfo("dc4-hd-protodune") # argument is there for testing when you don't have replica list.
     parse.writeme()
 
 
