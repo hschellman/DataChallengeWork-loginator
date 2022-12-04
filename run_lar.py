@@ -283,7 +283,7 @@ class DDInterface:
       cluster = '0'
       process = '0'
     ## TODO -- make options for capturing output
-    datetime.datetime.now().strftime("%Y%m%d%h%M%S%Z")
+    stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%Z")
     fname = "dc4_hd_protodune_%%tc_%s_%s_reco.root"%(cluster, process)
     oname = fname.replace(".root",".out").replace("%tc",stamp)
     ename = fname.replace(".root",".err").replace("%tc",stamp)
