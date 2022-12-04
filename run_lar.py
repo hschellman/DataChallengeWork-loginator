@@ -53,8 +53,10 @@ class DDInterface:
     self.dataset = "" #dataset
     self.limit = 1#limit
     self.namespace = namespace
-    query_args = (self.dataset, self.namespace, self.limit)
-    self.query = '''files from %s where namespace="%s" limit %i'''%query_args
+    #query_args = (self.dataset, self.namespace, self.limit)
+    #self.query = '''files from %s where namespace="%s" limit %i'''%query_args
+    query_args = (self.dataset, self.limit)
+    self.query = '''files from %s limit %i'''%query_args
     print ("the query is:",self.query)
     self.worker_timeout = 3600*5
     self.lar_limit = lar_limit
@@ -150,6 +152,7 @@ class DDInterface:
       self.Next()
       if self.next_output == None:
         ## this shouldn't happen, but if it does just exit the loop
+        print ("next_output = None")
         break
       elif self.next_output == True:
         ##this means the fetch timed out.
@@ -195,7 +198,7 @@ class DDInterface:
           ##also reset the number of times waited
           self.n_waited = 0
         else:
-          print('Empty replicas -- marking as failed')
+          print('Empty replicas -- marking as failed',self.next_output)
           self.file_failed(
               '%s:%s'%(self.next_output['namespace'], self.next_output['name']),
               do_retry=False)
@@ -284,7 +287,7 @@ class DDInterface:
       process = '0'
     ## TODO -- make options for capturing output
     stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%Z")
-    fname = "dc4_hd_protodune_%%tc_%s_%s_reco.root"%(cluster, process)
+    fname = "runLar_%%tc_%s_%s_reco.root"%(cluster, process)
     oname = fname.replace(".root",".out").replace("%tc",stamp)
     ename = fname.replace(".root",".err").replace("%tc",stamp)
     ofile = open(oname,'w')

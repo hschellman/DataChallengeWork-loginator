@@ -13,22 +13,23 @@ def create_project(dataset, namespace, query_limit=None, query_skip=None):
     auth_server_url='https://metacat.fnal.gov:8143/auth/dune')
   dd_client.login_x509(os.environ['USER'],
                        os.environ['X509_USER_PROXY'])
-  
-  query = 'files from %s where namespace="%s" ordered'%(dataset, namespace)
+
+  #query = 'files from %s where namespace="%s" ordered'%(dataset, namespace)
+  query = 'files from %s ordered'%(dataset)
   if query_skip: query += ' skip %s'%query_skip
   if query_limit: query += ' limit %s'%query_limit
-  print(query)
+  print("Start Project for :",query)
   #query metacat
   query_files = [i for i in mc_client.query(query)]
   #print(query_files)
-  
+
   #check size
   nfiles_in_dataset = len(query_files)
   if nfiles_in_dataset == 0:
     sys.stderr.write("Ignoring launch request on empty metacat query")
     sys.stderr.write("Query: %s"%query)
     sys.exit(1)
-  
+
   #make project in data dispatcher
   proj_dict = dd_client.create_project(query_files, query=query)
   dd_proj_id = proj_dict['project_id']
@@ -58,15 +59,15 @@ if __name__ == '__main__':
   parser.add_argument('--project', type=int, default=None)
   parser.add_argument('--dry_run', action='store_true')
 
-  args = parser.parse_args() 
-  
+  args = parser.parse_args()
+
   mc_client = MetaCatClient('https://metacat.fnal.gov:9443/dune_meta_demo/app')
   dd_client = DataDispatcherClient(
     server_url='https://metacat.fnal.gov:9443/dune/dd/data',
     auth_server_url='https://metacat.fnal.gov:8143/auth/dune')
   dd_client.login_x509(os.environ['USER'],
                        os.environ['X509_USER_PROXY'])
-  
+
   print(args.blacklist)
 
   if (not args.project) and args.dataset and args.namespace:
@@ -78,14 +79,14 @@ if __name__ == '__main__':
     #query metacat
     query_files = [i for i in mc_client.query(query)]
     #print(query_files)
-    
+
     #check size
     nfiles_in_dataset = len(query_files)
     if nfiles_in_dataset == 0:
       sys.stderr.write("Ignoring launch request on empty metacat query")
       sys.stderr.write("Query: %s"%query)
       sys.exit(1)
-    
+
     #make project in data dispatcher
     proj_dict = dd_client.create_project(query_files, query=query)
     dd_proj_id = proj_dict['project_id']
@@ -105,7 +106,7 @@ if __name__ == '__main__':
     njobs = [10000]*int(args.njobs/10000) + [args.njobs%10000]
   else:
     njobs = [args.njobs]
-    
+
   print(njobs)
   count = 0
   for nj in njobs:
