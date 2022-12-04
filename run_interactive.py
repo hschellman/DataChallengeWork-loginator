@@ -34,7 +34,7 @@ if __name__ == '__main__':
       appVersion = os.getenv("DUNESW_VERSION")
   else:
       appVersion = args.appVersion
-      
+
   if args.appFamily == None:
       appFamily = "LArSoft"
   else:
@@ -65,8 +65,9 @@ if __name__ == '__main__':
   dd_interface.SetWorkerID()
   print(os.environ['MYWORKERID'])
   dd_interface.AttachProject(dd_proj_id)
+  dd_interface.dump_project(dd_proj_id)
   dd_interface.LoadFiles()
   dd_interface.BuildFileListString()
   dd_interface.RunLAr(args.fcl, args.n, args.nskip)
-
+  dd_interface.dump_project(dd_proj_id)
   ##Loginator stuff here?

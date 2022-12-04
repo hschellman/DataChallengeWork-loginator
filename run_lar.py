@@ -11,6 +11,13 @@ from data_dispatcher.api import APIError
 
 import Loginator
 
+def NoneToString(thing):
+    if thing == None:
+        return "-"
+
+def makedid(namespace,name):
+    return "%s:%s"%(namespace,name)
+
 def call_and_retry(func):
   def inner1(*args, **kwargs):
     nretries = 0
@@ -143,6 +150,27 @@ class DDInterface:
     #print(datetime.datetime.now())
     return proj
 
+  @call_and_retry_return
+  def dump_project(self, proj_id):
+    proj = self.dd_client.get_project(proj_id, with_files=True)
+    print ("dumping project",proj_id)
+    for k in proj:
+        if k == "file_handles":
+            continue
+        print (k,proj[k])
+    for f in proj["file_handles"]:
+        reserved = f["reserved_since"]
+        if reserved == None:
+            reserved = "-"
+        else:
+            t = datetime.datetime.fromtimestamp(reserved,tz=datetime.timezone.utc)
+            reserved = t.isoformat()[0:19] + 'Z'
+
+        print("%10s\t%d\t%21s\t%8s\t%s:%s"%(f["state"],f["attempts"],(reserved),NoneToString(f["worker_id"]),f["namespace"],f["name"]))
+
+    #print(datetime.datetime.now())
+    return proj
+
   def LoadFiles(self):
     count = 0
     ##Should we take out the proj_state clause?
@@ -219,16 +247,30 @@ class DDInterface:
       self.next_replicas = list(self.next_output['replicas'].values())
 
 
-  def MarkFiles(self, failed=False):
+  def MarkFiles(self, failed=False,badlist=[]):
     state = 'failed' if failed else 'done'
     #nretries = 0
+
     for j in self.loaded_files:
+      did = makedid(j['namespace'], j['name'])
+      # mark all as failed if that is how things are set
       if failed:
         print('Marking failed')
-        self.file_failed('%s:%s'%(j['namespace'], j['name']))
+        self.file_failed(did)
+      # ok, maybe some failed,
       else:
-        print('Marking done')
-        self.file_done('%s:%s'%(j['namespace'], j['name']))
+        good = True
+        for b in badlist:
+            if did == b:
+                print ("this file was not used, mark as failed",did)
+                good = False
+                break
+        if good:
+            print('Marking done')
+            self.file_done(did)
+        else:
+            print('Marking failed')
+            self.file_failed(did)
 
   def SaveFileDIDs(self):
     lines = []
@@ -274,6 +316,7 @@ class DDInterface:
         ##TODO -- pop entry
         self.dd_client.file_failed(self.proj_id, '%s:%s'%(j['namespace'], j['name']))
         print(datetime.datetime.now())
+
   def RunLAr(self, fcl, n, nskip):
     if len(self.loaded_files) == 0:
       print('No files loaded with data dispatcher. Exiting gracefully')
@@ -287,7 +330,7 @@ class DDInterface:
       process = '0'
     ## TODO -- make options for capturing output
     stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%Z")
-    fname = "runLar_%%tc_%s_%s_reco.root"%(cluster, process)
+    fname = "runLar_%s_%%tc_%s_%s_reco.root"%(self.proj_id, cluster, process)
     oname = fname.replace(".root",".out").replace("%tc",stamp)
     ename = fname.replace(".root",".err").replace("%tc",stamp)
     ofile = open(oname,'w')
@@ -304,15 +347,20 @@ class DDInterface:
     logparse.addinfo({"application_family":self.appFamily,"application_name":self.appName,
     "application_version":self.appVersion,"delivery_method":"dd","workflow_method":"dd","project_id":self.proj_id})
     unused_replicas = logparse.addreplicainfo(self.input_replicas)
+    unused_replica_names = []
+    for u in unused_replicas:
+        unused_replica_names.append(u["namespace"]+":"+u["name"])
     logparse.addmetacatinfo(self.namespace) # only uses namespace if can't get from replica info
-    print ("replicas not used",unused_replicas)
+    print ("replicas not used",unused_replica_names)
     # write out json files for processed files whether closed properly or not.  Those never opened don't get logged.
     logparse.writeme()
     if proc.returncode != 0:
       self.MarkFiles(True)
-      sys.exit(proc.returncode)
-    self.MarkFiles()
+      print ("LAr returned", proc.returncode)
+      return proc.returncode
+    self.MarkFiles(False,unused_replica_names)
     self.SaveFileDIDs()
+
 
 
 if __name__ == '__main__':
@@ -346,4 +394,4 @@ if __name__ == '__main__':
   dd_interface.AttachProject(args.project)
   dd_interface.LoadFiles()
   dd_interface.BuildFileListString()
-  dd_interface.RunLAr(args.fcl, args.n, args.nskip)
+  code = dd_interface.RunLAr(args.fcl, args.n, args.nskip)
