@@ -54,7 +54,7 @@ if __name__ == '__main__':
   parser.add_argument('--output_str', type=str, default='"*reco.root"')
   parser.add_argument('--output_dataset', type=str, default='dd-interactive-tests')
   parser.add_argument('--output_namespace', type=str, default='dc4-hd-protodune')
-  parser.add_argument('--metacat_user', type=str, default='calcuttj')
+  parser.add_argument('--metacat_user', type=str, default='schellma')
   parser.add_argument('--blacklist', type=str, nargs='+')
   parser.add_argument('--project', type=int, default=None)
   parser.add_argument('--dry_run', action='store_true')

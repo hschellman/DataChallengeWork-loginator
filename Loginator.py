@@ -171,14 +171,14 @@ class Loginator:
                 if namespace == None:
                     print (" could not set namespace for",f)
                     continue
-            print (f,namespace)
+            if DEBUG: print (f,namespace)
             meta = mc_client.get_file(name=f,namespace=namespace)
-            print ("metacat answer",f,namespace)
+            if DEBUG: print ("metacat answer",f,namespace)
             if meta == None:
                 print ("no metadata for",f)
                 continue
             self.outobject[f]["access_method"]="metacat"
-            for item in ["data_tier","file_type","data_stream","run_type"]:
+            for item in ["data_tier","file_type","data_stream","run_type","event_count"]:
                 if "core."+item in meta["metadata"].keys():
                     self.outobject[f][item]=meta["metadata"]["core."+item]
                 else:
@@ -196,7 +196,7 @@ class Loginator:
             found = False
             for f in self.outobject:
                 if f == r["name"]:
-                    print ("replica match",r)
+                    if DEBUG: print ("replica match",r)
                     found = True
                     if "rse" in r:
                         self.outobject[f]["rse"] = r["rse"]
@@ -204,6 +204,7 @@ class Loginator:
                         self.outobject[f]["namespace"] = r["namespace"]
                 print (self.outobject[f])
             if not found:
+                print (r,"appears in replicas but not in Lar Log, need to mark as unused")
                 notfound.append(r)
 
         return notfound
@@ -227,7 +228,8 @@ class Loginator:
         #15-Nov-2022 17:24:41 CST https://docs.python.org/3/library/time.html#time.strftime
         format = "%d-%b-%Y %H:%M:%S"
         # python no longer accepts time zones.  We only want the different but need to correct for DT
-        thetime  = datetime.strptime(stamp[:-4],format)
+        print ("human2number converting",stamp)
+        thetime  = datetime.strptime(stamp[0:19],format)
         epoch = datetime.utcfromtimestamp(0)
         if "DT" in stamp:
             stamp += 3600

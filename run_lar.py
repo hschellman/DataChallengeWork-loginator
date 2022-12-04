@@ -11,9 +11,12 @@ from data_dispatcher.api import APIError
 
 import Loginator
 
+# make a string out of none for formatted Printing
 def NoneToString(thing):
     if thing == None:
         return "-"
+    else:
+        return thing
 
 def makedid(namespace,name):
     return "%s:%s"%(namespace,name)
@@ -341,23 +344,32 @@ class DDInterface:
 
     # get log info, match with replicas
     logparse = Loginator.Loginator(oname)
+
     # parse the log and find open./close/memory
     logparse.readme()
+
     #logparse.addinfo(logparse.getinfo())
-    logparse.addinfo({"application_family":self.appFamily,"application_name":self.appName,
+    logparse.addinfo({"dd_worker_id":os.environ["MYWORKERID"],"application_family":self.appFamily,"application_name":self.appName,
     "application_version":self.appVersion,"delivery_method":"dd","workflow_method":"dd","project_id":self.proj_id})
+
+    #deal with un
     unused_replicas = logparse.addreplicainfo(self.input_replicas)
     unused_replica_names = []
     for u in unused_replicas:
         unused_replica_names.append(u["namespace"]+":"+u["name"])
     logparse.addmetacatinfo(self.namespace) # only uses namespace if can't get from replica info
     print ("replicas not used",unused_replica_names)
+
     # write out json files for processed files whether closed properly or not.  Those never opened don't get logged.
     logparse.writeme()
+
+    # make all files as bad if job crashed
     if proc.returncode != 0:
       self.MarkFiles(True)
       print ("LAr returned", proc.returncode)
       return proc.returncode
+
+    # else go through files and mark the ones closed in the logfile as good
     self.MarkFiles(False,unused_replica_names)
     self.SaveFileDIDs()
 
