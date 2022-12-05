@@ -33,7 +33,7 @@ class Loginator:
         self.logfile = open(logname,'r')
         self.outobject ={}
         self.info = self.getsysinfo()
-        self.tags = ["Opened input file", "Closed input file","VmHWM","CPU"]
+        self.tags = ["Opened input file", "Closed input file","VmHWM","CPU","Events total"]
         self.template = {
             "source_rse":None,  #
             "user":None,  # (who's request is this)
@@ -52,6 +52,7 @@ class Loginator:
             "data_tier":None,  # (from metacat)
             "data_stream":None,
             "run_type":None,
+            "file_format":None,
             "job_node":None,  # (name within the site)
             "job_site":None,  # (name of the site)
             "country":None,  # (nationality of the site)
@@ -61,9 +62,12 @@ class Loginator:
             "access_method":None, #(samweb/dd)
             "path":None,
             "namespace":None,
-            "real_memory":None,
+            "job_real_memory":None,
             "project_id":0,
-            "delivery_method":None
+            "job_wall_time":None,
+            "job_cpu_time":None,
+            "job_total_events":None
+            
         }
         
     def envPrinter(self):
@@ -79,6 +83,14 @@ class Loginator:
                 if DEBUG: print (tag,line)
                 return tag
         return None
+        
+    def getSafe(self,dict,envname):
+        if envname in dict:
+            if DEBUG: print ("found ",envname)
+            return dict[envname]
+        else:
+            return None
+            
 
 ## get system info for the full job
     def getsysinfo(self):
@@ -88,8 +100,10 @@ class Loginator:
             info["user"]=os.getenv("GRID_USER")
         else:
             info["user"]=os.getenv("USER")
-        info["job_node"] = os.getenv("HOST")
-        info["job_site"] = os.getenv("GLIDEIN_DUNESite")
+        info["job_id"] = self.getSafe(os.environ,"JOBSUBJOBID")
+        info["job_node"] = self.getSafe(os.environ,"NODE_NAME")
+        #info["job_node"] = os.getenv("HOST")
+        info["job_site"] = os.getenv("SITE_NAME")
         #info["POMSINFO"] = os.getenv("poms_data")  # need to parse this further
         return info
     
@@ -102,6 +116,7 @@ class Loginator:
         memdata = None
         cpudata = None
         walldata = None
+        totalevents = None
         for line in self.logfile:
             tag = self.findme(line)
             if DEBUG: print (tag,line)
@@ -115,7 +130,11 @@ class Loginator:
                     continue
                 cpudata = timeline[3]
                 walldata = timeline[6]
-                
+            if "Events total" in tag:
+                eventline  = line.strip().split(" ")
+                if len(eventline) < 11:
+                    continue
+                totalevents = eventline[4]
             if "file" in tag:
                 data = line.split(tag)
                 filefull = data[1].strip().replace('"','')
@@ -151,9 +170,10 @@ class Loginator:
                 #print ("mem",memdata,filename)
         # add the memory info if available
         for thing in object:
-            if memdata != None: object[thing]["real_memory"]=memdata
+            if memdata != None: object[thing]["job_real_memory"]=memdata
             if walldata != None: object[thing]["job_wall_time"]=walldata
             if cpudata != None: object[thing]["job_cpu_time"]=cpudata
+            if totalevents != None: object[thing]["job_total_events"]=totalevents
             #print ("mem",object[thing]["real_memory"])
         self.outobject=object
 
@@ -173,7 +193,7 @@ class Loginator:
             meta = samweb.getMetadata(f)
             self.outobject[f]["namespace"]="samweb"
             self.outobject[f]["access_method"]="samweb"
-            for item in ["data_tier","file_type","data_stream","group","file_size"]:
+            for item in ["data_tier","file_type","data_stream","group","file_size","file_format"]:
                 self.outobject[f][item]=meta[item]
             for run in meta["runs"]:
                 self.outobject[f]["run_type"] = run[2]
@@ -198,7 +218,7 @@ class Loginator:
                 print ("no metadata for",f)
                 continue
             self.outobject[f]["access_method"]="metacat"
-            for item in ["data_tier","file_type","data_stream","run_type","event_count"]:
+            for item in ["data_tier","file_type","data_stream","run_type","event_count","file_format"]:
                 if "core."+item in meta["metadata"].keys():
                     self.outobject[f][item]=meta["metadata"]["core."+item]
                 else:

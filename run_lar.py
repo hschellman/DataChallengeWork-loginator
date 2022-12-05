@@ -305,8 +305,8 @@ class DDInterface:
     for j in self.loaded_files:
       replicas = list(j['replicas'].values())
       if len(replicas) > 0:
-        #Get the first replica
-        replica = replicas[0]
+        #Get the last replica
+        replica = replicas[len(replicas)-1]
         self.input_replicas.append(replica)
         print('Replica:', replica)
         uri = replica['url']

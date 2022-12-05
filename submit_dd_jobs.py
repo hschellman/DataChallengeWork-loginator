@@ -58,9 +58,27 @@ if __name__ == '__main__':
   parser.add_argument('--blacklist', type=str, nargs='+')
   parser.add_argument('--project', type=int, default=None)
   parser.add_argument('--dry_run', action='store_true')
-
+  parser.add_argument('--appFamily', type=str)
+  parser.add_argument('--appVersion', type=str)
+  parser.add_argument('--appName', type=str)
+  
   args = parser.parse_args()
 
+  if args.appName == None:
+      appName = args.fcl.replace(".fcl","")
+  else:
+      appName = args.appName
+
+  if args.appVersion == None:
+      appVersion = os.getenv("DUNESW_VERSION")
+  else:
+      appVersion = args.appVersion
+
+  if args.appFamily == None:
+      appFamily = "LArSoft"
+  else:
+      appFamily = args.appFamily
+      
   mc_client = MetaCatClient('https://metacat.fnal.gov:9443/dune_meta_demo/app')
   dd_client = DataDispatcherClient(
     server_url='https://metacat.fnal.gov:9443/dune/dd/data',
