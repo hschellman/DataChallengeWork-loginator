@@ -33,7 +33,7 @@ class Loginator:
         self.logfile = open(logname,'r')
         self.outobject ={}
         self.info = self.getsysinfo()
-        self.tags = ["Opened input file", "Closed input file","VmHWM"]
+        self.tags = ["Opened input file", "Closed input file","VmHWM","CPU"]
         self.template = {
             "source_rse":None,  #
             "user":None,  # (who's request is this)
@@ -62,7 +62,7 @@ class Loginator:
             "path":None,
             "namespace":None,
             "real_memory":None,
-            "project_id":None,
+            "project_id":0,
             "delivery_method":None
         }
 
@@ -91,6 +91,8 @@ class Loginator:
     def readme(self):
         object = {}
         memdata = None
+        cpudata = None
+        walldata = None
         for line in self.logfile:
             tag = self.findme(line)
             if DEBUG: print (tag,line)
@@ -98,6 +100,13 @@ class Loginator:
                 continue
             if "VmHWM" == tag:
                 memdata = line.split("VmHWM = ")[1].strip()
+            if "CPU" == tag:
+                timeline = line.strip().split(" ")
+                if len(timeline) < 7:
+                    continue
+                cpudata = timeline[3]
+                walldata = timeline[6]
+                
             if "file" in tag:
                 data = line.split(tag)
                 filefull = data[1].strip().replace('"','')
@@ -134,6 +143,8 @@ class Loginator:
         # add the memory info if available
         for thing in object:
             if memdata != None: object[thing]["real_memory"]=memdata
+            if walldata != None: object[thing]["job_wall_time"]=walldata
+            if cpudata != None: object[thing]["job_cpu_time"]=cpudata
             #print ("mem",object[thing]["real_memory"])
         self.outobject=object
 
@@ -184,6 +195,7 @@ class Loginator:
                 else:
                     print ("no", item, "in ",list(meta["metadata"].keys()))
             self.outobject[f]["file_size"]=meta["size"]
+            self.outobject[f]["campaign"]=meta["DUNE.campaign"]
             self.outobject[f]["fid"]=meta["fid"]
             self.outobject[f]["namespace"]=namespace
 
@@ -217,7 +229,7 @@ class Loginator:
     def writeme(self):
         result = []
         for thing in self.outobject:
-            outname = thing+".process.json"
+            outname = "%s_%d_process.json" %(thing,self.outobject[thing]["project_id"])
             outfile = open(outname,'w')
             json.dump(self.outobject[thing],outfile,indent=4)
             outfile.close()
