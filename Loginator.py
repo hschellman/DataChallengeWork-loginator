@@ -65,6 +65,12 @@ class Loginator:
             "project_id":0,
             "delivery_method":None
         }
+        
+    def envPrinter(self):
+        env = os.environ
+        for k in env:
+            print ("env ",k,"=",env[k])
+
 
 ## return the first tag or None in a line
     def findme(self,line):
@@ -86,6 +92,9 @@ class Loginator:
         info["job_site"] = os.getenv("GLIDEIN_DUNESite")
         #info["POMSINFO"] = os.getenv("poms_data")  # need to parse this further
         return info
+    
+    def addsysinfo(self):
+        self.addinfo(self.getsysinfo())
 
 ## read in the log file and parse it, add the info
     def readme(self):
@@ -195,7 +204,8 @@ class Loginator:
                 else:
                     print ("no", item, "in ",list(meta["metadata"].keys()))
             self.outobject[f]["file_size"]=meta["size"]
-            self.outobject[f]["campaign"]=meta["DUNE.campaign"]
+            if "DUNE.campaign" in meta["metadata"]:
+                self.outobject[f]["campaign"]=meta["metadata"]["DUNE.campaign"]
             self.outobject[f]["fid"]=meta["fid"]
             self.outobject[f]["namespace"]=namespace
 
@@ -252,27 +262,13 @@ class Loginator:
         t1 = self.human2number(end)
         return t1-t0
 
-def envScraper():
-    env = os.environ
-    if "apple" in env["CLANGXX"]:
-        f = open("bigenv.txt")
-        env = {}
-        for a in f.readlines():
-            line = a.split("=")
-            env[line[0]] = line[1]
-    digest = {}
-    for k in env.keys():
-        if "SETUP_" in k:
-            it = env[k].split(" ")
-            digest[k] = {"Product":it[0],"Version":it[1]}
-    return digest
 
 
 def test():
     parse = Loginator(sys.argv[1])
     print ("looking at",sys.argv[1])
     parse.readme()
-    parse.addinfo(parse.getsysinfo())
+    parse.addsysinfo()
    # parse.addsaminfo()
     parse.addreplicainfo([])
     parse.addmetacatinfo("dc4-hd-protodune") # argument is there for testing when you don't have replica list.

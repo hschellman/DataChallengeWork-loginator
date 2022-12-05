@@ -346,12 +346,13 @@ class DDInterface:
     logparse = Loginator.Loginator(oname)
 
     # parse the log and find open./close/memory
+    logparse.envPrinter()
     logparse.readme()
 
     #logparse.addinfo(logparse.getinfo())
     logparse.addinfo({"dd_worker_id":os.environ["MYWORKERID"],"application_family":self.appFamily,"application_name":self.appName,
     "application_version":self.appVersion,"delivery_method":"dd","workflow_method":"dd","project_id":self.proj_id})
-
+    logparse.addsysinfo()
     #deal with un
     unused_replicas = logparse.addreplicainfo(self.input_replicas)
     unused_replica_names = []

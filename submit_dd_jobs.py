@@ -49,7 +49,7 @@ if __name__ == '__main__':
   parser.add_argument('--njobs', type=int, default=1)
 
   parser.add_argument('--load_limit', type=int, default=None)
-  parser.add_argument('--fcl', type=str, default='evd_protoDUNE.fcl')
+  parser.add_argument('--fcl', type=str, default='eventdump.fcl')
   parser.add_argument('--nevents', type=int, default=-1)
   parser.add_argument('--output_str', type=str, default='"*reco.root"')
   parser.add_argument('--output_dataset', type=str, default='dd-interactive-tests')
