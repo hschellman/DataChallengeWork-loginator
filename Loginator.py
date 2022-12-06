@@ -35,41 +35,45 @@ class Loginator:
         self.info = self.getsysinfo()
         self.tags = ["Opened input file", "Closed input file","VmHWM","CPU","Events total"]
         self.template = {
-            "source_rse":None,  #
+             # job attributes
             "user":None,  # (who's request is this)
             "job_id":None, # (jobsubXXX03@fnal.gov)
+            "job_node":None,  # (name within the site)
+            "job_site":None,  # (name of the site)
+            "country":None,  # (nationality of the site)
+            "job_real_memory":None,
+            "job_wall_time":None,
+            "job_cpu_time":None,
+            "job_total_events":None,
+            # processing attributes
+            "project_id":0,
+            "delivery_method":None, #(stream/copy)
+            "workflow_method":None,
+            "access_method":None, #(samweb/dd)
             "timestamp_for_start":None,  #
             "timestamp_for_end":None,  #
-            "duration":None,  # (difference between end and start)
-            "file_size":None,  #
             "application_family":None,  #
             "application_name":None,  #
             "application_version":None,  #
             "final_state":None,  # (what happened?)
             "project_name":None, #(wkf request_id?)"
+            "duration":None,  # (difference between end and start)
+            "path":None,
+            "rse":None,
+            # file attributes from metacat
+            "file_size":None,  #
+            "file_type":None,  #
             "file_name":None,  # (not including the metacat namespace)
             "fid":None, # metacat fid
             "data_tier":None,  # (from metacat)
             "data_stream":None,
             "run_type":None,
             "file_format":None,
-            "job_node":None,  # (name within the site)
-            "job_site":None,  # (name of the site)
-            "country":None,  # (nationality of the site)
-            "campaign":None,  # (DUNE campaign)
-            "delivery_method":None, #(stream/copy)
-            "workflow_method":None,
-            "access_method":None, #(samweb/dd)
-            "path":None,
+            "file_campaign":None,  # (DUNE campaign)
             "namespace":None,
-            "job_real_memory":None,
-            "project_id":0,
-            "job_wall_time":None,
-            "job_cpu_time":None,
-            "job_total_events":None
-            
+            "event_count":None
         }
-        
+
     def envPrinter(self):
         env = os.environ
         for k in env:
@@ -83,14 +87,14 @@ class Loginator:
                 if DEBUG: print (tag,line)
                 return tag
         return None
-        
+
     def getSafe(self,dict,envname):
         if envname in dict:
             if DEBUG: print ("found ",envname)
             return dict[envname]
         else:
             return None
-            
+
 
 ## get system info for the full job
     def getsysinfo(self):
@@ -106,7 +110,7 @@ class Loginator:
         info["job_site"] = os.getenv("GLIDEIN_DUNESite")
         #info["POMSINFO"] = os.getenv("poms_data")  # need to parse this further
         return info
-    
+
     def addsysinfo(self):
         self.addinfo(self.getsysinfo())
 
@@ -155,8 +159,8 @@ class Loginator:
                     if "root" in filepath[0:10]:
                         if DEBUG: print ("I am root")
                         tmp = filepath.split("//")
-                        localobject["source_rse"] = tmp[1]
-                        localobject["deliver_method"] = "xroot"
+                        localobject["rse"] = tmp[1]
+                        localobject["delivery_method"] = "xroot"
                     for thing in self.info:
                         localobject[thing] = self.info[thing]
                     localobject["final_state"] = "Opened"
@@ -225,7 +229,7 @@ class Loginator:
                     print ("no", item, "in ",list(meta["metadata"].keys()))
             self.outobject[f]["file_size"]=meta["size"]
             if "DUNE.campaign" in meta["metadata"]:
-                self.outobject[f]["campaign"]=meta["metadata"]["DUNE.campaign"]
+                self.outobject[f]["file_campaign"]=meta["metadata"]["DUNE.campaign"]
             self.outobject[f]["fid"]=meta["fid"]
             self.outobject[f]["namespace"]=namespace
 
@@ -245,6 +249,30 @@ class Loginator:
                     if "namespace" in r:
                         self.outobject[f]["namespace"] = r["namespace"]
                 print (self.outobject[f])
+            if not found:
+                print (r,"appears in replicas but not in Lar Log, need to mark as unused")
+                notfound.append(r)
+
+        return notfound
+        
+    def findmissingfiles(self,files):
+        notfound = []
+        
+        for r in files:
+            found = False
+            if ":" in r:
+                s = r.split(":")
+                name = s[1]
+                namespace = s[0]
+            else:
+                name = r
+                namespace = "samweb"
+                
+            for f in self.outobject:
+                if f == name:
+                    if DEBUG: print ("file match",r)
+                    found = True
+                    self.outobject[f]["namespace"] = namespace
             if not found:
                 print (r,"appears in replicas but not in Lar Log, need to mark as unused")
                 notfound.append(r)

@@ -57,7 +57,32 @@ def call_and_retry_return(func):
       sys.exit(1)
     return result
   return inner1
+  
+class LArWrapper:
+    def __init__(self,fcl=None,flist=[],n=None,nskip=None,o=None,appFamily=None, appName=None, appVersion=None, deliveryMethod=None, workflowMethod=None,projectId=None):
+        oname = fname.replace(".root",".out").replace("%tc",stamp)
+        ename = fname.replace(".root",".err").replace("%tc",stamp)
+        ofile = open(oname,'w')
+        efile = open(ename,'w')
+        proc = subprocess.run('lar -c %s -s %s -n %i --nskip %i -o fname'%(fcl, flist, n, nskip), shell=True, stdout=ofile,stderr=efile)
+        ofile.close()
+        efile.close()
 
+    # get log info, match with replicas
+        logparse = Loginator.Loginator(oname)
+
+    # parse the log and find open./close/memory
+        logparse.envPrinter()
+        logparse.readme()
+
+    #logparse.addinfo(logparse.getinfo())
+        logparse.addinfo({"dd_worker_id":os.environ["MYWORKERID"],"application_family":appFamily,"application_name":appName,
+    "application_version":self.Version,"delivery_method":deliveryMethod,"workflow_method":workflowMethod,"project_id":projectId})
+        logparse.addsysinfo()
+    #deal with un
+        unused_replicas = logparse.addreplicainfo(self.input_replicas)
+    return unused_replicas
+    
 class DDInterface:
   def __init__(self, namespace, lar_limit, timeout=120, wait_time=60, wait_limit=5, appFamily=None, appName=None, appVersion=None):
     self.dataset = "" #dataset
