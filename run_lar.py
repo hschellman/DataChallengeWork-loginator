@@ -9,7 +9,10 @@ import requests
 from data_dispatcher.api import DataDispatcherClient
 from data_dispatcher.api import APIError
 
+import LArWrapper
 import Loginator
+
+TEST = True
 
 # make a string out of none for formatted Printing
 def NoneToString(thing):
@@ -58,30 +61,7 @@ def call_and_retry_return(func):
     return result
   return inner1
   
-class LArWrapper:
-    def __init__(self,fcl=None,flist=[],n=None,nskip=None,o=None,appFamily=None, appName=None, appVersion=None, deliveryMethod=None, workflowMethod=None,projectId=None):
-        oname = fname.replace(".root",".out").replace("%tc",stamp)
-        ename = fname.replace(".root",".err").replace("%tc",stamp)
-        ofile = open(oname,'w')
-        efile = open(ename,'w')
-        proc = subprocess.run('lar -c %s -s %s -n %i --nskip %i -o fname'%(fcl, flist, n, nskip), shell=True, stdout=ofile,stderr=efile)
-        ofile.close()
-        efile.close()
 
-    # get log info, match with replicas
-        logparse = Loginator.Loginator(oname)
-
-    # parse the log and find open./close/memory
-        logparse.envPrinter()
-        logparse.readme()
-
-    #logparse.addinfo(logparse.getinfo())
-        logparse.addinfo({"dd_worker_id":os.environ["MYWORKERID"],"application_family":appFamily,"application_name":appName,
-    "application_version":self.Version,"delivery_method":deliveryMethod,"workflow_method":workflowMethod,"project_id":projectId})
-        logparse.addsysinfo()
-    #deal with un
-        unused_replicas = logparse.addreplicainfo(self.input_replicas)
-    return unused_replicas
     
 class DDInterface:
   def __init__(self, namespace, lar_limit, timeout=120, wait_time=60, wait_limit=5, appFamily=None, appName=None, appVersion=None):
@@ -356,47 +336,57 @@ class DDInterface:
     else:
       cluster = '0'
       process = '0'
-    ## TODO -- make options for capturing output
-    stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%Z")
-    fname = "runLar_%s_%%tc_%s_%s_reco.root"%(self.proj_id, cluster, process)
-    oname = fname.replace(".root",".out").replace("%tc",stamp)
-    ename = fname.replace(".root",".err").replace("%tc",stamp)
-    ofile = open(oname,'w')
-    efile = open(ename,'w')
-    proc = subprocess.run('lar -c %s -s %s -n %i --nskip %i -o fname'%(fcl, self.lar_file_list, n, nskip), shell=True, stdout=ofile,stderr=efile)
-    ofile.close()
-    efile.close()
+      
+    unused_files = []
+    if TEST:  # new interface that does not talk to dd
+        lar = LArWrapper.LArWrapper(fcl=fcl, replicas=self.input_replicas, flist=self.lar_file_list, n=n, nskip=nskip, appFamily=self.appFamily, appName=self.appName, appVersion=self.appVersion, deliveryMethod="dd", workflowMethod="dd", projectID=self.proj_id, formatString="runLar_%s_%%tc_%s_%s_reco.root")
+        returncode = lar.DoLAr(cluster, process)
+        unused_files = lar.LArResults()
+    else: # old interace that has more detail exposed.
+        ## TODO -- make options for capturing output
+        stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%Z")
+        fname = "runLar_%s_%%tc_%s_%s_reco.root"%(self.proj_id, cluster, process)
+        oname = fname.replace(".root",".out").replace("%tc",stamp)
+        ename = fname.replace(".root",".err").replace("%tc",stamp)
+        ofile = open(oname,'w')
+        efile = open(ename,'w')
+        proc = subprocess.run('lar -c %s -s %s -n %i --nskip %i -o fname'%(fcl, self.lar_file_list, n, nskip), shell=True, stdout=ofile,stderr=efile)
+        returncode = proc.returncode
+        ofile.close()
+        efile.close()
 
-    # get log info, match with replicas
-    logparse = Loginator.Loginator(oname)
+        # get log info, match with replicas
+        logparse = Loginator.Loginator(oname)
 
-    # parse the log and find open./close/memory
-    logparse.envPrinter()
-    logparse.readme()
+        # parse the log and find open./close/memory
+        logparse.envPrinter()
+        logparse.readme()
 
-    #logparse.addinfo(logparse.getinfo())
-    logparse.addinfo({"dd_worker_id":os.environ["MYWORKERID"],"application_family":self.appFamily,"application_name":self.appName,
-    "application_version":self.appVersion,"delivery_method":"dd","workflow_method":"dd","project_id":self.proj_id})
-    logparse.addsysinfo()
+        #logparse.addinfo(logparse.getinfo())
+        logparse.addinfo({"dd_worker_id":os.environ["MYWORKERID"],"application_family":self.appFamily,"application_name":self.appName,
+        "application_version":self.appVersion,"delivery_method":"dd","workflow_method":"dd","project_id":self.proj_id})
+        logparse.addsysinfo()
     #deal with un
-    unused_replicas = logparse.addreplicainfo(self.input_replicas)
-    unused_replica_names = []
-    for u in unused_replicas:
-        unused_replica_names.append(u["namespace"]+":"+u["name"])
-    logparse.addmetacatinfo(self.namespace) # only uses namespace if can't get from replica info
-    print ("replicas not used",unused_replica_names)
+        unused_replicas = logparse.addreplicainfo(self.input_replicas)
+        
+        
+        unused_files = []
+        for u in unused_replicas:
+            unused_files.append(u["namespace"]+":"+u["name"])
+        logparse.addmetacatinfo(self.namespace) # only uses namespace if can't get from replica info
+        print ("replicas not used",unused_files)
 
-    # write out json files for processed files whether closed properly or not.  Those never opened don't get logged.
-    logparse.writeme()
+        # write out json files for processed files whether closed properly or not.  Those never opened don't get logged.
+        logparse.writeme()
 
     # make all files as bad if job crashed
-    if proc.returncode != 0:
+    if returncode != 0:
       self.MarkFiles(True)
-      print ("LAr returned", proc.returncode)
-      return proc.returncode
+      print ("LAr returned", returncode)
+      return returncode
 
     # else go through files and mark the ones closed in the logfile as good
-    self.MarkFiles(False,unused_replica_names)
+    self.MarkFiles(False,unused_files)
     self.SaveFileDIDs()
 
 
