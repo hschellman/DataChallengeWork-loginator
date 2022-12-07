@@ -60,9 +60,9 @@ def call_and_retry_return(func):
       sys.exit(1)
     return result
   return inner1
-  
 
-    
+
+
 class DDInterface:
   def __init__(self, namespace, lar_limit, timeout=120, wait_time=60, wait_limit=5, appFamily=None, appName=None, appVersion=None):
     self.dataset = "" #dataset
@@ -336,7 +336,7 @@ class DDInterface:
     else:
       cluster = '0'
       process = '0'
-      
+
     unused_files = []
     if TEST:  # new interface that does not talk to dd
         lar = LArWrapper.LArWrapper(fcl=fcl, replicas=self.input_replicas, flist=self.lar_file_list, n=n, nskip=nskip, appFamily=self.appFamily, appName=self.appName, appVersion=self.appVersion, deliveryMethod="dd", workflowMethod="dd", projectID=self.proj_id, formatString="runLar_%s_%%tc_%s_%s_reco.root")
@@ -368,8 +368,8 @@ class DDInterface:
         logparse.addsysinfo()
     #deal with un
         unused_replicas = logparse.addreplicainfo(self.input_replicas)
-        
-        
+
+
         unused_files = []
         for u in unused_replicas:
             unused_files.append(u["namespace"]+":"+u["name"])
