@@ -33,7 +33,7 @@ class Loginator:
         self.logfile = open(logname,'r')
         self.outobject ={}
         self.info = self.getsysinfo()
-        self.tags = ["Opened input file", "Closed input file","VmHWM","CPU","Events total"]
+        self.tags = ["Opened input file", "Closed input file","MemReport  VmPeak","CPU","Events total"]
         self.template = {
              # job attributes
             "user":None,  # (who's request is this)
@@ -126,7 +126,7 @@ class Loginator:
             if DEBUG: print (tag,line)
             if tag == None:
                 continue
-            if "VmHWM" == tag:
+            if "MemReport  VmPeak" == tag:
                 memdata = line.split("VmHWM = ")[1].strip()
             if "CPU" == tag:
                 timeline = line.strip().split(" ")

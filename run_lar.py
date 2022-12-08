@@ -228,6 +228,7 @@ class DDInterface:
       else:
         ##we successfully got a file (at least nominally). Check that it has replicas available.
         ##If it doesn't, compromise it to a permament end
+        print ("got a file",datetime.datetime.now())
         if len(self.next_replicas) > 0:
           self.loaded_files.append(self.next_output)
           count += 1
@@ -339,7 +340,7 @@ class DDInterface:
 
     unused_files = []
     if TEST:  # new interface that does not talk to dd
-        lar = LArWrapper.LArWrapper(fcl=fcl, replicas=self.input_replicas, flist=self.lar_file_list, n=n, nskip=nskip, appFamily=self.appFamily, appName=self.appName, appVersion=self.appVersion, deliveryMethod="dd", workflowMethod="dd", projectID=self.proj_id, formatString="runLar_%s_%%tc_%s_%s_reco.root")
+        lar = LArWrapper.LArWrapper(fcl=fcl, o="temp.root", replicas=self.input_replicas, flist=self.lar_file_list, n=n, nskip=nskip, appFamily=self.appFamily, appName=self.appName, appVersion=self.appVersion, deliveryMethod="dd", workflowMethod="dd", projectID=self.proj_id, formatString="runLar_%s_%%tc_%s_%s_%s.root")
         returncode = lar.DoLAr(cluster, process)
         unused_files = lar.LArResults()
     else: # old interace that has more detail exposed.
