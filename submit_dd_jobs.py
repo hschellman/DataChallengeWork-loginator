@@ -128,7 +128,7 @@ if __name__ == '__main__':
   print(njobs)
   count = 0
   for nj in njobs:
-    cmd =  'fife_launch -c byhand.cfg ' \
+    cmd =  'fife_launch -c ddconfig.cfg ' \
           f'-Oglobal.load_limit={args.load_limit} ' \
           f'-Oglobal.project={dd_proj_id} ' \
           f'-Oglobal.nevents={args.nevents} ' \
@@ -136,7 +136,11 @@ if __name__ == '__main__':
           f'-Oglobal.output_dataset={args.output_dataset} ' \
           f'-Oglobal.output_namespace={args.output_namespace} ' \
           f'-Osubmit.N={nj} ' \
-          f'-Oglobal.metacat_user={args.metacat_user} '
+          f'-Oglobal.metacat_user={args.metacat_user} '\
+          f'-Oglobal.appFamily={args.appFamily} '\
+          f'-Oglobal.appName={args.appName} '\
+          f'-Oglobal.appVersion={args.appVersion} '\
+          f'-Oglobal.fcl={args.fcl} '
 
     if args.blacklist:
       cs_blacklist = ','.join(args.blacklist)
@@ -144,7 +148,7 @@ if __name__ == '__main__':
 
     if args.dry_run:
       cmd += '--dry_run '
-    print(cmd)
+    print("submit command:",cmd)
     #cmd2 = ('fife_launch -c byhand.cfg '
     #        '-Oglobal.load_limit=%i '
     #        '-Oglobal.project=%s '

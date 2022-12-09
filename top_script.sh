@@ -83,6 +83,21 @@ while [[ $# -gt 0 ]]; do
       shift
       shift
       ;;
+    --appFamily)
+      APPFAMILY=$2
+      shift
+      shift
+      ;;
+    --appName)
+      APPNAME=$2
+      shift
+      shift
+      ;;
+    --appVersion)
+      APPVERSION=$2
+      shift
+      shift
+      ;;
     --rse)
       output_rses+=($2)
       shift
@@ -124,6 +139,22 @@ sleep $sleeptime
 export MYWORKERID=`ddisp worker id -n`
 echo "workerid: ${MYWORKERID}"
 
+echo "I am in directory" ${PWD}
+
+ls -lrt
+
+echo "the input directory"
+
+ls -lrt $CONDOR_DIR_INPUT
+
+export FHICL_FILE_PATH=${CONDOR_DIR_INPUT}:${FHICL_FILE_PATH}
+
+echo "try to really mean it about the FCL since putting it in the path doesn't seem to do it for me"
+
+cp ${CONDOR_DIR_INPUT}/$FCL .
+
+echo "I will now run run_lar with fcl file " $FCL
+
 python -m run_lar \
   --namespace $NAMESPACE \
   --fcl $FCL \
@@ -131,6 +162,9 @@ python -m run_lar \
   --load_limit $LOADLIMIT \
   --user $USER \
   -n $N \
+  --appFamily $APPFAMILY \
+  --appName $APPNAME \
+  --appVersion $APPVERSION \
   #--nskip $nskip \
   #> ${logname}.out 2>${logname}.err
 
@@ -139,21 +173,27 @@ returncode=$?
 echo "Return code: " $returncode
 export SCRATCH_DIR=/pnfs/dune/scratch/users
 #setup ifdh
-ifdh ls ${SCRATCH_DIR}/${USER}/ddtest
+export OUTDIR=${SCRATCH_DIR}/${USER}/ddtest/${PROJECT}
+
+ifdh mkdir_p ${OUTDIR}
+export IFDH_DEBUG=0
 #if [ $? -ne 0 &&- z "$IFDH_OPTION"]; then
 #    echo "Unable to read ${SCRATCH_DIR}/${USER}/ddtest make sure that you have created this directory and given it group write permission."
 #    exit 74
 #else
     # directory already exists, so let's copy
-echo $PWD
-ls $PWD/*.json > files.txt
-ls $PWD/*.out >> files.txt
-ls $PWD/*.err >> files.txt
-echo "copy the following files to "${SCRATCH_DIR}/${USER}/ddtest
+ls -lrt
+env > env.txt
+echo ${OUTDIR}
+ls  > files.txt
+
+echo "copy the following files to "${OUTDIR}
 cat files.txt
-ifdh cp -D $IFDH_OPTION *.json ${SCRATCH_DIR}/${USER}/ddtest
-ifdh cp -D $IFDH_OPTION *.out ${SCRATCH_DIR}/${USER}/ddtest
-ifdh cp -D $IFDH_OPTION *.err ${SCRATCH_DIR}/${USER}/ddtest
+ifdh cp -D $IFDH_OPTION *.json ${OUTDIR}
+ifdh cp -D $IFDH_OPTION *.txt ${OUTDIR}
+ifdh cp -D $IFDH_OPTION *.out ${OUTDIR}
+ifdh cp -D $IFDH_OPTION *.err ${OUTDIR}
+ifdh cp -D $IFDH_OPTION *.fcl ${OUTDIR}
 #fi
 )
 echo "Site: $GLIDEIN_DUNESite" #>> ${logname}.out

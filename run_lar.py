@@ -96,6 +96,8 @@ class DDInterface:
     self.appVersion = appVersion
 
     self.retry_time = 600
+    
+    if TEST: print ("DDInterface args:",args)
 
     #try:
     #  from data_dispatcher.api import DataDispatcherClient
@@ -326,7 +328,7 @@ class DDInterface:
         self.dd_client.file_failed(self.proj_id, '%s:%s'%(j['namespace'], j['name']))
         print(datetime.datetime.now())
 
-  def RunLAr(self, fcl, n, nskip):
+  def RunLAr(self, fcl=None, n=-1, nskip=0):
     if len(self.loaded_files) == 0:
       print('No files loaded with data dispatcher. Exiting gracefully')
       return
@@ -337,7 +339,7 @@ class DDInterface:
     else:
       cluster = '0'
       process = '0'
-
+    print ("RunLAr called with ",fcl,n,nskip)
     unused_files = []
     if TEST:  # new interface that does not talk to dd
         lar = LArWrapper.LArWrapper(fcl=fcl, o="temp.root", replicas=self.input_replicas, flist=self.lar_file_list, n=n, nskip=nskip, appFamily=self.appFamily, appName=self.appName, appVersion=self.appVersion, deliveryMethod="dd", workflowMethod="dd", projectID=self.proj_id, formatString="runLar_%s_%%tc_%s_%s_%s.root")
@@ -423,4 +425,4 @@ if __name__ == '__main__':
   dd_interface.AttachProject(args.project)
   dd_interface.LoadFiles()
   dd_interface.BuildFileListString()
-  code = dd_interface.RunLAr(args.fcl, args.n, args.nskip)
+  code = dd_interface.RunLAr(fcl=args.fcl, n=args.n, nskip=args.nskip)

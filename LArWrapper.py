@@ -47,13 +47,15 @@ class LArWrapper:
 
         if self.formatString == None:
             formatString = "process_%s_%%tc_%s_%s_%s.root"
+        
 
     def DoLAr(self,cluster=0,process=0):
+        print ("check fcl",self.fcl,os.path.exists(self.fcl))
         print ("reading",self.flist)
         stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%Z")
         print (self.formatString)
-        print (self.projectID, cluster, process, self.fcl.replace(".fcl",""))
-        fname = self.formatString%(self.projectID, cluster, process, self.fcl.replace(".fcl",""))
+        print (self.projectID, cluster, process, os.path.basename(self.fcl).replace(".fcl",""))
+        fname = self.formatString%(self.projectID, cluster, process, os.path.basename(self.fcl).replace(".fcl",""))
         self.oname = fname.replace(".root",".out").replace("%tc",stamp)
         self.ename = fname.replace(".root",".err").replace("%tc",stamp)
         ofile = open(self.oname,'w')
