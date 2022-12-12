@@ -47,9 +47,9 @@ class Loginator:
             "job_total_events":None,
             # processing attributes
             "project_id":0,
-            "delivery_method":None, #(stream/copy)
+            "delivery_method":None, #(samweb/dd/wfs)
             "workflow_method":None,
-            "access_method":None, #(samweb/dd)
+            "access_method":None, #(stream/copy)
             "timestamp_for_start":None,  #
             "timestamp_for_end":None,  #
             "application_family":None,  #
@@ -160,7 +160,7 @@ class Loginator:
                         if DEBUG: print ("I am root")
                         tmp = filepath.split("//")
                         localobject["rse"] = tmp[1]
-                        localobject["delivery_method"] = "xroot"
+                        localobject["access_method"] = "xroot"
                     for thing in self.info:
                         localobject[thing] = self.info[thing]
                     localobject["final_state"] = "Opened"
@@ -196,7 +196,7 @@ class Loginator:
             if DEBUG: print ("f ",f)
             meta = samweb.getMetadata(f)
             self.outobject[f]["namespace"]="samweb"
-            self.outobject[f]["access_method"]="samweb"
+            self.outobject[f]["delivery_method"]="samweb"
             for item in ["data_tier","file_type","data_stream","group","file_size","file_format"]:
                 self.outobject[f][item]=meta[item]
             for run in meta["runs"]:
@@ -221,7 +221,7 @@ class Loginator:
             if meta == None:
                 print ("no metadata for",f)
                 continue
-            self.outobject[f]["access_method"]="metacat"
+            self.outobject[f]["delivery_method"]="dd"
             for item in ["data_tier","file_type","data_stream","run_type","event_count","file_format"]:
                 if "core."+item in meta["metadata"].keys():
                     self.outobject[f][item]=meta["metadata"]["core."+item]

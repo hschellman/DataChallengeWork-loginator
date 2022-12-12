@@ -20,8 +20,8 @@ import Loginator
 
 class LArWrapper:
     def __init__(self,fcl=None,replicas=None,flist="",o="temp.root",n=None,nskip=0,appFamily=None, appName=None,
-     appVersion=None, deliveryMethod=None, workflowMethod=None, projectID=None, sam_web_uri=None,processID=None,processHASH=None,
-     formatString="runLar_%s_%%tc_%s_%s_%s.root", dataTier="sam-user", dataStream="test"):
+     appVersion=None, deliveryMethod=None, workflowMethod=None, projectID=None, sam_web_uri=None,processID=None,\
+     processHASH=None,formatString="runLar_%s_%s_%%tc_%s_%s_%s.root", dataTier="sam-user", dataStream="test"):
         self.fcl = fcl
         self.flist = flist
         self.n = n
@@ -46,8 +46,8 @@ class LArWrapper:
         self.dataStream = dataStream
 
         if self.formatString == None:
-            formatString = "process_%s_%%tc_%s_%s_%s.root"
-        
+            formatString = "process_%s_%s_%%tc_%s_%s_%s.root"
+
 
     def DoLAr(self,cluster=0,process=0):
         print ("check fcl",self.fcl,os.path.exists(self.fcl))
@@ -55,7 +55,7 @@ class LArWrapper:
         stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%Z")
         print (self.formatString)
         print (self.projectID, cluster, process, os.path.basename(self.fcl).replace(".fcl",""))
-        fname = self.formatString%(self.projectID, cluster, process, os.path.basename(self.fcl).replace(".fcl",""))
+        fname = self.formatString%(self.deliveryMethod,self.projectID, cluster, process, os.path.basename(self.fcl).replace(".fcl",""))
         self.oname = fname.replace(".root",".out").replace("%tc",stamp)
         self.ename = fname.replace(".root",".err").replace("%tc",stamp)
         ofile = open(self.oname,'w')
@@ -65,11 +65,12 @@ class LArWrapper:
             print ("cmd = ",cmd)
             proc = subprocess.run(cmd, shell=True, stdout=ofile,stderr=efile)
         elif self.deliveryMethod == "samweb":
-            lar_cmd = ("lar -c%s" % self.fcl) + (" -n%i"%self.n) + " -T temp.root" +\
-             (" --sam-web-uri=%s"%self.sam_web_uri) + (" --sam-process-id=%s"%self.processID) + \
-             (" --sam-application-family=%s"%self.appFamily) + (" --sam-application-version=%s"%self.appVersion)
+            lar_cmd = 'lar -c %s -n %i --sam-web-uri=%s --sam-process-id=%s --sam-application-family=%s \
+             --sam-application-version=%s --sam-data-tier %s --sam-stream-name %s'%(self.fcl,\
+             self.n,self.sam_web_uri,self.processID,self.appFamily,self.appVersion,self.dataTier,self.dataStream)
             print (lar_cmd)
-            proc = subprocess.run(lar_cmd, stdout=ofile)
+            proc = subprocess.run(lar_cmd,shell=True, stdout=ofile,stderr=efile)
+
         else:  # assume it's something like interactive
             cmd = 'lar -c %s -s %s -n %i --nskip %i -o %s'%(self.fcl, self.flist, self.n, self.nskip, fname)
             print ("cmd = ",cmd)
@@ -100,7 +101,7 @@ class LArWrapper:
                 unused_files.append(u["namespace"]+":"+u["name"])
             logparse.addmetacatinfo()
             print ("files not used",unused_files)
-        elif deliveryMethod == "samweb":
+        elif self.deliveryMethod == "samweb":
             unused_files = logparse.findmissingfiles(self.files)
             logparse.addsaminfo()
 
