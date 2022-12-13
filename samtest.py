@@ -24,7 +24,7 @@ def testProject(defname="schellma-run5141-PDSPProd4", appFamily="samtest", appNa
         larW = LArWrapper.LArWrapper(fcl=fcl,appFamily=appFamily,appName=appName,\
         appVersion=appVersion,deliveryMethod="samweb",workflowMethod="interactive",\
         sam_web_uri=projecturl,processID=cpid,projectID=projectID,\
-        dataTier="out1:sam-user",dataStream="out1:test",n=200)
+        dataTier="out1:sam-user",dataStream="out1:test",n=120)
         retcode = larW.DoLAr(0,0)
         list = larW.LArResults()
         print ("return code",retcode)

@@ -21,7 +21,7 @@ from datetime import date,timezone,datetime
 #from dateutil import parser
 
 
-DEBUG=False
+DEBUG=True
 
 class Loginator:
 
@@ -197,7 +197,7 @@ class Loginator:
             meta = samweb.getMetadata(f)
             self.outobject[f]["namespace"]="samweb"
             self.outobject[f]["delivery_method"]="samweb"
-            for item in ["data_tier","file_type","data_stream","group","file_size","file_format"]:
+            for item in ["event_count","data_tier","file_type","data_stream","file_size","file_format"]:
                 self.outobject[f][item]=meta[item]
             for run in meta["runs"]:
                 self.outobject[f]["run_type"] = run[2]
@@ -254,10 +254,10 @@ class Loginator:
                 notfound.append(r)
 
         return notfound
-        
+
     def findmissingfiles(self,files):
         notfound = []
-        
+
         for r in files:
             found = False
             if ":" in r:
@@ -267,7 +267,7 @@ class Loginator:
             else:
                 name = r
                 namespace = "samweb"
-                
+
             for f in self.outobject:
                 if f == name:
                     if DEBUG: print ("file match",r)
@@ -319,7 +319,8 @@ def test():
     parse.addsysinfo()
    # parse.addsaminfo()
     parse.addreplicainfo([])
-    parse.addmetacatinfo("dc4-hd-protodune") # argument is there for testing when you don't have replica list.
+    parse.addsaminfo()
+    #parse.addmetacatinfo("dc4-hd-protodune") # argument is there for testing when you don't have replica list.
     parse.writeme()
 
 
