@@ -64,9 +64,9 @@ def call_and_retry_return(func):
 
 
 class DDInterface:
-  def __init__(self, namespace=None, lar_limit=0, timeout=120, wait_time=60, wait_limit=5,\
+  def __init__(self, dataset=None, namespace=None, lar_limit=0, timeout=120, wait_time=60, wait_limit=5,\
    appFamily=None, appName=None, appVersion=None, workflowMethod="dd"):
-    self.dataset = "" #dataset
+    self.dataset = DATASET
     self.limit = 1#limit
     self.namespace = namespace
     #query_args = (self.dataset, self.namespace, self.limit)
