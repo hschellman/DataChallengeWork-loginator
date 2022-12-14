@@ -199,6 +199,8 @@ class Loginator:
             self.outobject[f]["delivery_method"]="samweb"
             for item in ["event_count","data_tier","file_type","data_stream","file_size","file_format"]:
                 self.outobject[f][item]=meta[item]
+            if "DUNE.campaign" in meta:
+                self.outobject[f]["file_campaign"] = meta["DUNE.campaign"]
             for run in meta["runs"]:
                 self.outobject[f]["run_type"] = run[2]
                 break

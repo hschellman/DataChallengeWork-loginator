@@ -64,14 +64,19 @@ def call_and_retry_return(func):
 
 
 class DDInterface:
-  def __init__(self, namespace, lar_limit, timeout=120, wait_time=60, wait_limit=5, appFamily=None, appName=None, appVersion=None):
+  def __init__(self, namespace=None, lar_limit=0, timeout=120, wait_time=60, wait_limit=5,\
+   appFamily=None, appName=None, appVersion=None, workflowMethod="dd"):
     self.dataset = "" #dataset
     self.limit = 1#limit
     self.namespace = namespace
     #query_args = (self.dataset, self.namespace, self.limit)
     #self.query = '''files from %s where namespace="%s" limit %i'''%query_args
-    query_args = (self.dataset, self.limit)
-    self.query = '''files from %s limit %i'''%query_args
+    if namespace == None:
+        query_args = (self.dataset, self.limit)
+        self.query = '''files from %s limit %i'''%query_args
+    else:
+        query_args = (self.dataset, self.namespace, self.limit)
+        self.query = '''files from %s where namespace="%s" limit %i'''%query_args  # this is not a good idea
     print ("the query is:",self.query)
     self.worker_timeout = 3600*5
     self.lar_limit = lar_limit
@@ -94,10 +99,11 @@ class DDInterface:
     self.appFamily = appFamily
     self.appName = appName
     self.appVersion = appVersion
+    self.deliveryMethod="dd"
+    self.workflowMethod=workflowMethod
 
     self.retry_time = 600
-    
-    if TEST: print ("DDInterface args:",args)
+
 
     #try:
     #  from data_dispatcher.api import DataDispatcherClient
@@ -342,7 +348,7 @@ class DDInterface:
     print ("RunLAr called with ",fcl,n,nskip)
     unused_files = []
     if TEST:  # new interface that does not talk to dd
-        lar = LArWrapper.LArWrapper(fcl=fcl, o="temp.root", replicas=self.input_replicas, flist=self.lar_file_list, n=n, nskip=nskip, appFamily=self.appFamily, appName=self.appName, appVersion=self.appVersion, deliveryMethod="dd", workflowMethod="dd", projectID=self.proj_id, formatString="runLar_%s_%%tc_%s_%s_%s.root")
+        lar = LArWrapper.LArWrapper(fcl=fcl, o="temp.root", replicas=self.input_replicas, flist=self.lar_file_list, n=n, nskip=nskip, appFamily=self.appFamily, appName=self.appName, appVersion=self.appVersion, deliveryMethod="dd", workflowMethod=self.workflowMethod, projectID=self.proj_id, formatString="runLar_%s_%s_%%tc_%s_%s_%s.root")
         returncode = lar.DoLAr(cluster, process)
         unused_files = lar.LArResults()
     else: # old interace that has more detail exposed.
@@ -401,6 +407,7 @@ if __name__ == '__main__':
   parser.add_argument('--appFamily', type=str)
   parser.add_argument('--appName', type=str)
   parser.add_argument('--appVersion', type=str)
+  parser.add_argument('--workflowMethod', default='dd', type=str, help="set this to interactive if interactive")
   parser.add_argument('--fcl', type=str)
   parser.add_argument('--load_limit', type=int)
   parser.add_argument('--user', type=str)
@@ -419,7 +426,8 @@ if __name__ == '__main__':
                              wait_limit=args.wait_limit,
                              appFamily=args.appFamily,
                              appName=args.appName,
-                             appVersion=args.appVersion
+                             appVersion=args.appVersion,
+                             workflowMethod=args.workflowMethod
                              )
   dd_interface.Login(args.user)
   dd_interface.AttachProject(args.project)

@@ -6,7 +6,7 @@ from data_dispatcher.api import DataDispatcherClient
 from argparse import ArgumentParser as ap
 import subprocess
 
-def create_project(dataset, namespace, query_limit=None, query_skip=None):
+def create_project(dataset=None, namespace = None, query_limit=None, query_skip=None):
   mc_client = MetaCatClient('https://metacat.fnal.gov:9443/dune_meta_demo/app')
   dd_client = DataDispatcherClient(
     server_url='https://metacat.fnal.gov:9443/dune/dd/data',
@@ -14,8 +14,11 @@ def create_project(dataset, namespace, query_limit=None, query_skip=None):
   dd_client.login_x509(os.environ['USER'],
                        os.environ['X509_USER_PROXY'])
 
-  #query = 'files from %s where namespace="%s" ordered'%(dataset, namespace)
-  query = 'files from %s ordered'%(dataset)
+  if namespace != None:
+      query = 'files from %s where namespace="%s" ordered'%(dataset, namespace)
+  else:
+      query = 'files from %s ordered'%(dataset)
+
   if query_skip: query += ' skip %s'%query_skip
   if query_limit: query += ' limit %s'%query_limit
   print("Start Project for :",query)
@@ -61,7 +64,7 @@ if __name__ == '__main__':
   parser.add_argument('--appFamily', type=str)
   parser.add_argument('--appVersion', type=str)
   parser.add_argument('--appName', type=str)
-  
+
   args = parser.parse_args()
 
   if args.appName == None:
@@ -78,7 +81,7 @@ if __name__ == '__main__':
       appFamily = "LArSoft"
   else:
       appFamily = args.appFamily
-      
+
   mc_client = MetaCatClient('https://metacat.fnal.gov:9443/dune_meta_demo/app')
   dd_client = DataDispatcherClient(
     server_url='https://metacat.fnal.gov:9443/dune/dd/data',
@@ -88,9 +91,12 @@ if __name__ == '__main__':
 
   print(args.blacklist)
 
-  if (not args.project) and args.dataset and args.namespace:
+  if (not args.project) and args.dataset:
     ##build up query
-    query = 'files from %s where namespace="%s" ordered'%(args.dataset, args.namespace)
+    if args.namespace == None:
+        query = 'files from %s ordered'%(args.dataset)
+    else:
+        query = 'files from %s where namespace="%s" ordered'%(args.dataset, args.namespace)
     if args.query_skip: query += ' skip %s'%args.query_skip
     if args.query_limit: query += ' limit %s'%args.query_limit
     print(query)
@@ -114,10 +120,10 @@ if __name__ == '__main__':
       print('Only making project. Exiting now')
       exit()
 
-  elif args.project and not (args.dataset and args.namespace):
+  elif args.project and not (args.dataset):
     dd_proj_id = args.project
   else:
-    sys.stderr.write("Need to provide project OR dataset & namespace\n")
+    sys.stderr.write("Need to provide project OR dataset & optional namespace\n")
     sys.exit(1)
 
   if args.njobs > 10000:
