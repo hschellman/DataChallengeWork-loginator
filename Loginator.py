@@ -21,7 +21,7 @@ from datetime import date,timezone,datetime
 #from dateutil import parser
 
 
-DEBUG=True
+DEBUG=False
 
 class Loginator:
 
@@ -184,13 +184,18 @@ class Loginator:
     def addinfo(self,info):
         for s in info:
             if s in self.outobject:
-                print ("Loginator replacing",s, self.outobject[s],self.info[s])
+                print ("Loginator.addinfo replacing",s, self.outobject[s],self.info[s])
             else:
                 for f in self.outobject:
                     self.outobject[f][s] = info[s]
                     if DEBUG: print ("adding",s,info[s])
 
     def addsaminfo(self):
+        if "SAM_EXPERIMENT" in os.environ:
+            import samweb_client
+        else:
+            print ("You need to set up samweb to get sam info")
+            sys.exit(0)
         samweb = samweb_client.SAMWebClient(experiment='dune')
         for f in self.outobject:
             if DEBUG: print ("f ",f)
@@ -228,7 +233,7 @@ class Loginator:
                 if "core."+item in meta["metadata"].keys():
                     self.outobject[f][item]=meta["metadata"]["core."+item]
                 else:
-                    print ("no", item, "in ",list(meta["metadata"].keys()))
+                    print ("addmetacatinfo: no", item, "in ",list(meta["metadata"].keys()))
             self.outobject[f]["file_size"]=meta["size"]
             if "DUNE.campaign" in meta["metadata"]:
                 self.outobject[f]["file_campaign"]=meta["metadata"]["DUNE.campaign"]
@@ -250,7 +255,7 @@ class Loginator:
                         self.outobject[f]["rse"] = r["rse"]
                     if "namespace" in r:
                         self.outobject[f]["namespace"] = r["namespace"]
-                print (self.outobject[f])
+                if DEBUG: print (self.outobject[f])
             if not found:
                 print (r,"appears in replicas but not in Lar Log, need to mark as unused")
                 notfound.append(r)
@@ -300,7 +305,7 @@ class Loginator:
         #15-Nov-2022 17:24:41 CST https://docs.python.org/3/library/time.html#time.strftime
         format = "%d-%b-%Y %H:%M:%S"
         # python no longer accepts time zones.  We only want the different but need to correct for DT
-        print ("human2number converting",stamp)
+        #print ("human2number converting",stamp)
         thetime  = datetime.strptime(stamp[0:19],format)
         epoch = datetime.utcfromtimestamp(0)
         if "DT" in stamp:
@@ -316,12 +321,15 @@ class Loginator:
 
 def test():
     parse = Loginator(sys.argv[1])
-    print ("looking at",sys.argv[1])
+    #print ("looking at",sys.argv[1])
     parse.readme()
     parse.addsysinfo()
    # parse.addsaminfo()
     parse.addreplicainfo([])
-    parse.addsaminfo()
+    if "SAM_EXPERIMENT" in os.environ:
+        parse.addsaminfo()
+    else:
+        parse.addmetacatinfo("pdsp_det_reco")
     #parse.addmetacatinfo("dc4-hd-protodune") # argument is there for testing when you don't have replica list.
     parse.writeme()
 

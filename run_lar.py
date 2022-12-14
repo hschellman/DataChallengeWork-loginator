@@ -66,7 +66,7 @@ def call_and_retry_return(func):
 class DDInterface:
   def __init__(self, dataset=None, namespace=None, lar_limit=0, timeout=120, wait_time=60, wait_limit=5,\
    appFamily=None, appName=None, appVersion=None, workflowMethod="dd"):
-    self.dataset = DATASET
+    self.dataset = dataset
     self.limit = 1#limit
     self.namespace = namespace
     #query_args = (self.dataset, self.namespace, self.limit)
@@ -77,7 +77,7 @@ class DDInterface:
     else:
         query_args = (self.dataset, self.namespace, self.limit)
         self.query = '''files from %s where namespace="%s" limit %i'''%query_args  # this is not a good idea
-    print ("the query is:",self.query)
+    print ("DDInterface: the query is:",self.query)
     self.worker_timeout = 3600*5
     self.lar_limit = lar_limit
     self.proj_id = -1
@@ -131,7 +131,7 @@ class DDInterface:
     self.proj_state = proj_dict['state']
     self.proj_id = proj_dict['project_id']
     self.proj_exists = True
-    print(proj_dict)
+    #print(proj_dict)
 
   def PrintFiles(self):
     print('Printing files')
