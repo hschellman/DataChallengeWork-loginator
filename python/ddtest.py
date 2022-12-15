@@ -16,8 +16,9 @@ if __name__ == '__main__':
     parser.add_argument('--timeout', type=int, default=120)
     parser.add_argument('--wait_time', type=int, default=120)
     parser.add_argument('--wait_limit', type=int, default=5)
+    parser.add_argument('--workFlowMethod', type=int, default="batch", help= 'workflow method [interactive,batch,wfs]')
     # args shared with lar
-    #parser.add_argument('--defName', default="schellma-run5141-PDSPProd4", type=str, help='samweb dataset definition name')
+   
     parser.add_argument('--appFamily',default='test', type=str, help=' application family')
     parser.add_argument('--appName', default='test',type=str, help=' application name')
     parser.add_argument('--appVersion', default=os.getenv('DUNESW_VERSION'), type=str, help='application version')

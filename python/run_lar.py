@@ -12,7 +12,7 @@ from data_dispatcher.api import APIError
 import LArWrapper
 import Loginator
 
-TEST = True
+
 
 # make a string out of none for formatted Printing
 def NoneToString(thing):
@@ -166,7 +166,7 @@ class DDInterface:
     #print(datetime.datetime.now())
     return proj
 
-  @call_and_retry_return
+ 
   def dump_project(self, proj_id):
     proj = self.dd_client.get_project(proj_id, with_files=True)
     print ("dumping project",proj_id)
@@ -184,8 +184,6 @@ class DDInterface:
 
         print("%10s\t%d\t%21s\t%8s\t%s:%s"%(f["state"],f["attempts"],(reserved),NoneToString(f["worker_id"]),f["namespace"],f["name"]))
 
-    #print(datetime.datetime.now())
-    return proj
 
   def LoadFiles(self):
     count = 0
@@ -347,46 +345,46 @@ class DDInterface:
       process = '0'
     print ("RunLAr called with ",fcl,n,nskip)
     unused_files = []
-    if TEST:  # new interface that does not talk to dd
-        lar = LArWrapper.LArWrapper(fcl=fcl, o="temp.root", replicas=self.input_replicas, flist=self.lar_file_list, n=n, nskip=nskip, appFamily=self.appFamily, appName=self.appName, appVersion=self.appVersion, deliveryMethod="dd", workflowMethod=self.workflowMethod, projectID=self.proj_id, formatString="runLar_%s_%s_%%tc_%s_%s_%s.root")
-        returncode = lar.DoLAr(cluster, process)
-        unused_files = lar.LArResults()
-    else: # old interace that has more detail exposed.
-        ## TODO -- make options for capturing output
-        stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%Z")
-        fname = "runLar_%s_%%tc_%s_%s_reco.root"%(self.proj_id, cluster, process)
-        oname = fname.replace(".root",".out").replace("%tc",stamp)
-        ename = fname.replace(".root",".err").replace("%tc",stamp)
-        ofile = open(oname,'w')
-        efile = open(ename,'w')
-        proc = subprocess.run('lar -c %s -s %s -n %i --nskip %i -o fname'%(fcl, self.lar_file_list, n, nskip), shell=True, stdout=ofile,stderr=efile)
-        returncode = proc.returncode
-        ofile.close()
-        efile.close()
-
-        # get log info, match with replicas
-        logparse = Loginator.Loginator(oname)
-
-        # parse the log and find open./close/memory
-        logparse.envPrinter()
-        logparse.readme()
-
-        #logparse.addinfo(logparse.getinfo())
-        logparse.addinfo({"dd_worker_id":os.environ["MYWORKERID"],"application_family":self.appFamily,"application_name":self.appName,
-        "application_version":self.appVersion,"delivery_method":"dd","workflow_method":"dd","project_id":self.proj_id})
-        logparse.addsysinfo()
-    #deal with un
-        unused_replicas = logparse.addreplicainfo(self.input_replicas)
-
-
-        unused_files = []
-        for u in unused_replicas:
-            unused_files.append(u["namespace"]+":"+u["name"])
-        logparse.addmetacatinfo(self.namespace) # only uses namespace if can't get from replica info
-        print ("replicas not used",unused_files)
-
-        # write out json files for processed files whether closed properly or not.  Those never opened don't get logged.
-        logparse.writeme()
+      # new interface that does not talk to dd
+    lar = LArWrapper.LArWrapper(fcl=fcl, o="temp.root", replicas=self.input_replicas, flist=self.lar_file_list, n=n, nskip=nskip, appFamily=self.appFamily, appName=self.appName, appVersion=self.appVersion, deliveryMethod="dd", workflowMethod=self.workflowMethod, projectID=self.proj_id, formatString="runLar_%s_%s_%%tc_%s_%s_%s.root")
+    returncode = lar.DoLAr(cluster, process)
+    unused_files = lar.LArResults()
+#    else: # old interace that has more detail exposed.
+#        ## TODO -- make options for capturing output
+#        stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%Z")
+#        fname = "runLar_%s_%%tc_%s_%s_reco.root"%(self.proj_id, cluster, process)
+#        oname = fname.replace(".root",".out").replace("%tc",stamp)
+#        ename = fname.replace(".root",".err").replace("%tc",stamp)
+#        ofile = open(oname,'w')
+#        efile = open(ename,'w')
+#        proc = subprocess.run('lar -c %s -s %s -n %i --nskip %i -o fname'%(fcl, self.lar_file_list, n, nskip), shell=True, stdout=ofile,stderr=efile)
+#        returncode = proc.returncode
+#        ofile.close()
+#        efile.close()
+#
+#        # get log info, match with replicas
+#        logparse = Loginator.Loginator(oname)
+#
+#        # parse the log and find open./close/memory
+#        logparse.envPrinter()
+#        logparse.readme()
+#
+#        #logparse.addinfo(logparse.getinfo())
+#        logparse.addinfo({"dd_worker_id":os.environ["MYWORKERID"],"application_family":self.appFamily,"application_name":self.appName,
+#        "application_version":self.appVersion,"delivery_method":"dd","workflow_method":"dd","project_id":self.proj_id})
+#        logparse.addsysinfo()
+#    #deal with un
+#        unused_replicas = logparse.addreplicainfo(self.input_replicas)
+#
+#
+#        unused_files = []
+#        for u in unused_replicas:
+#            unused_files.append(u["namespace"]+":"+u["name"])
+#        logparse.addmetacatinfo(self.namespace) # only uses namespace if can't get from replica info
+#        print ("replicas not used",unused_files)
+#
+#        # write out json files for processed files whether closed properly or not.  Those never opened don't get logged.
+#        logparse.writeme()
 
     # make all files as bad if job crashed
     if returncode != 0:
@@ -402,35 +400,57 @@ class DDInterface:
 
 if __name__ == '__main__':
 
-  parser = ap()
-  parser.add_argument('--namespace', type=str)
-  parser.add_argument('--appFamily', type=str)
-  parser.add_argument('--appName', type=str)
-  parser.add_argument('--appVersion', type=str)
-  parser.add_argument('--workflowMethod', default='dd', type=str, help="set this to interactive if interactive")
-  parser.add_argument('--fcl', type=str)
-  parser.add_argument('--load_limit', type=int)
-  parser.add_argument('--user', type=str)
-  parser.add_argument('--project', type=int)
-  parser.add_argument('--timeout', type=int, default=120)
-  parser.add_argument('--wait_time', type=int, default=120)
-  parser.add_argument('--wait_limit', type=int, default=5)
-  parser.add_argument('-n', type=int, default=-1)
-  parser.add_argument('--nskip', type=int, default=0)
-  args = parser.parse_args()
+     parser = ap()
+    # dd args
+    parser.add_argument('--dataset', default='schellma:run5141recentReco',type=str)
+    parser.add_argument('--load_limit', default=4, type=int)
+    parser.add_argument('--query_limit', default=10)
+    parser.add_argument('--query_skip', default=0)
+    parser.add_argument('--projectID', default=None)
+    parser.add_argument('--timeout', type=int, default=120)
+    parser.add_argument('--wait_time', type=int, default=120)
+    parser.add_argument('--wait_limit', type=int, default=5)
+    parser.add_argument('--workFlowMethod', type=int, default="batch", help= 'workflow method [interactive,batch,wfs]')
+    # args shared with lar
+   
+    parser.add_argument('--appFamily',default='test', type=str, help=' application family')
+    parser.add_argument('--appName', default='test',type=str, help=' application name')
+    parser.add_argument('--appVersion', default=os.getenv('DUNESW_VERSION'), type=str, help='application version')
+    parser.add_argument('--dataTier', default='out1:sam-user',type=str, help='data tier for output file')
+    parser.add_argument('--dataStream', default='out1:test',type=str, help='data stream for output file')
+    parser.add_argument('-o', default="temp.root", type=str, help='output event stream file')
+    parser.add_argument('-c', required=True, type=str, help='name of fcl file')
+    parser.add_argument('--user', default = os.getenv("USER"),type=str, help='user name')
+    parser.add_argument('-n', type=int, default=10, help='number of events total to process')
+    parser.add_argument('--nskip', type=int, default=0, help='number of events to skip before starting')
+    args = parser.parse_args()
 
-  dd_interface = DDInterface(args.namespace,
-                             args.load_limit,
+    if (not args.projectID) and args.dataset:
+        dd_proj_id = submit_dd_jobs.create_project(dataset=args.dataset, namespace=None,
+                                  query_limit=args.query_limit,
+                                  query_skip=args.query_skip)
+
+
+    elif args.project and not (args.dataset and args.namespace):
+        dd_proj_id = int(args.project)
+    else:
+        sys.stderr.write("Need to provide project OR dataset & namespace\n")
+        sys.exit(1)
+
+    dd_interface = DDInterface( lar_limit=args.load_limit,
                              timeout=args.timeout,
                              wait_time=args.wait_time,
                              wait_limit=args.wait_limit,
                              appFamily=args.appFamily,
                              appName=args.appName,
                              appVersion=args.appVersion,
-                             workflowMethod=args.workflowMethod
-                             )
-  dd_interface.Login(args.user)
-  dd_interface.AttachProject(args.project)
-  dd_interface.LoadFiles()
-  dd_interface.BuildFileListString()
-  code = dd_interface.RunLAr(fcl=args.fcl, n=args.n, nskip=args.nskip)
+                             workflowMethod="interactive")
+    dd_interface.Login(args.user)
+    dd_interface.SetWorkerID()
+    print(os.environ['MYWORKERID'])
+    dd_interface.AttachProject(dd_proj_id)
+    #dd_interface.dump_project(dd_proj_id)
+    dd_interface.LoadFiles()
+    dd_interface.BuildFileListString()
+    dd_interface.RunLAr(args.c, args.n, args.nskip)
+    dd_interface.dump_project(dd_proj_id)

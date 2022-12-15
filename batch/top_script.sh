@@ -118,7 +118,7 @@ echo $NAMESPACE
 
 logname=loginator-${NAMESPACE}_${PROCESS}_${CLUSTER}_`date +%F_%H_%M_%S`
 
-export PYTHONPATH=${CONDOR_DIR_INPUT}:${PYTHONPATH}
+export PYTHONPATH=${CONDOR_DIR_INPUT}/python:${PYTHONPATH}
 
 ###Setting up dunesw/Data Dispatcher/MetaCat and running lar
 (
@@ -145,13 +145,13 @@ ls -lrt
 
 echo "the input directory"
 
-ls -lrt $CONDOR_DIR_INPUT
+ls -lrtR $CONDOR_DIR_INPUT
 
-export FHICL_FILE_PATH=${CONDOR_DIR_INPUT}:${FHICL_FILE_PATH}
+export FHICL_FILE_PATH=${CONDOR_DIR_INPUT}/fcl:${FHICL_FILE_PATH}
 
-echo "try to really mean it about the FCL since putting it in the path doesn't seem to do it for me"
+#echo "try to really mean it about the FCL since putting it in the path doesn't seem to do it for me"
 
-cp ${CONDOR_DIR_INPUT}/$FCL .
+#cp ${CONDOR_DIR_INPUT}/fcl/$FCL .
 
 echo "I will now run run_lar with fcl file " $FCL
 
@@ -165,7 +165,8 @@ python -m run_lar \
   --appFamily $APPFAMILY \
   --appName $APPNAME \
   --appVersion $APPVERSION \
-  #--nskip $nskip \
+  --nskip $nskip \
+  --workflowmethod batch
   #> ${logname}.out 2>${logname}.err
 
 returncode=$?
