@@ -122,6 +122,7 @@ class LArWrapper:
             #unused_files = logparse.findmissingfiles(self.files)
             info["process_id"]=self.processID
             logparse.addsaminfo()
+            unused_files = None
 
         # heck if I know what to do.
         else:
@@ -170,5 +171,5 @@ if __name__ == "__main__":
     processID = args.processID, processHASH = args.processHASH, projectID=args.projectID, sam_web_uri = args.sam_web_uri,
     debug = args.debug, formatString=args.formatString)
     returncode = lar.DoLAr(0, args.processID)
-    unused_files = lar.LArResults()
+
     sys.exit(returncode)

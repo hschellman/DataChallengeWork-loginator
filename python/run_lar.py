@@ -72,8 +72,7 @@ class DDInterface:
     #query_args = (self.dataset, self.namespace, self.limit)
     #self.query = '''files from %s where namespace="%s" limit %i'''%query_args
     if namespace == None:
-        query_args = (self.dataset, self.limit)
-        self.query = '''files from %s limit %i'''%query_args
+        self.query = '''files from %s limit %i'''%(self.dataset, self.limit)
     else:
         query_args = (self.dataset, self.namespace, self.limit)
         self.query = '''files from %s where namespace="%s" limit %i'''%query_args  # this is not a good idea
@@ -285,9 +284,11 @@ class DDInterface:
         if good:
             print('Marking done')
             self.file_done(did)
+            print('Marked as done')
         else:
             print('Marking failed')
             self.file_failed(did)
+            print('Marked as failed')
 
   def SaveFileDIDs(self):
     lines = []
@@ -460,7 +461,8 @@ if __name__ == '__main__':
                              appName=args.appName,
                              appVersion=args.appVersion,
                              workflowMethod=args.workflowMethod,
-                             namespace=args.namespace)
+                             namespace=args.namespace
+                             dataset=args.dataset)
     dd_interface.Login(args.user)
     dd_interface.SetWorkerID()
     print(os.environ['MYWORKERID'])
