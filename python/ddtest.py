@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('--wait_limit', type=int, default=5)
     parser.add_argument('--workFlowMethod', type=int, default="batch", help= 'workflow method [interactive,batch,wfs]')
     # args shared with lar
-   
+
     parser.add_argument('--appFamily',default='test', type=str, help=' application family')
     parser.add_argument('--appName', default='test',type=str, help=' application name')
     parser.add_argument('--appVersion', default=os.getenv('DUNESW_VERSION'), type=str, help='application version')
@@ -37,10 +37,10 @@ if __name__ == '__main__':
                                   query_skip=args.query_skip)
 
 
-    elif args.project and not (args.dataset and args.namespace):
-        dd_proj_id = int(args.project)
+    elif args.projectID and not (args.dataset and args.namespace):
+        dd_proj_id = int(args.projectID)
     else:
-        sys.stderr.write("Need to provide project OR dataset & namespace\n")
+        sys.stderr.write("Need to provide projectID OR dataset & namespace\n")
         sys.exit(1)
 
     dd_interface = DDInterface( lar_limit=args.load_limit,

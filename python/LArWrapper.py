@@ -1,8 +1,8 @@
-"""! @brief Art logfile parser """
+"""! @brief Wrapper for LAr that supports both sam and dd access """
 ##
 # @mainpage LArWrapper.py
 #
-# @section description_main A wrapper for lar that parses logs and finds unprocessed files.
+# @section description_main A wrapper for lar that uses loginator to parse logs and finds unprocessed files.
 #
 # Copyright (c) 2022 Heidi Schellman, Oregon State University
 ##
@@ -18,10 +18,14 @@ import datetime
 import requests
 import Loginator
 
+## class that wraps lar - tries to have similar arguments.
+
 class LArWrapper:
-    def __init__(self,fcl=None,replicas=None,flist="",o="temp.root",n=None,nskip=0,appFamily=None, appName=None,
-     appVersion=None, deliveryMethod=None, workflowMethod=None, projectID=None, sam_web_uri=None,processID=None,\
-     processHASH=None,formatString="runLar_%s_%s_%%tc_%s_%s_%s.root", dataTier="sam-user", dataStream="test"):
+    def __init__(self,debug=False,fcl=None,flist="",o="temp*.root",n=None,nskip=0,appFamily=None, appName=None,\
+     appVersion=None,  projectID=None, sam_web_uri=None,processID=None,dataTier="sam-user", dataStream="test",\
+     deliveryMethod=None, workflowMethod=None,formatString="runLar_%s_%s_%%tc_%s_%s_%s.root",\
+     processHASH=None,replicas=None):
+     # lar arguments
         self.fcl = fcl
         self.flist = flist
         self.n = n
@@ -30,41 +34,49 @@ class LArWrapper:
         self.appFamily = appFamily
         self.appVersion = appVersion
         self.appName = appName
+        self.projectID = projectID
+        ## useful for samweb
+        self.sam_web_uri = sam_web_uri
+        self.processID = processID
+        self.dataTier = dataTier
+        self.dataStream = dataStream
+        ## useful debuging
         self.deliveryMethod = deliveryMethod
         self.workflowMethod = workflowMethod
         self.oname = None
         self.ename = None
+        self.returncode = None
+        self.debug = debug
+        # useful for dd
         self.formatString = formatString
         self.replicas = replicas
-        self.flist = flist
-        self.returncode = None
-        self.projectID = projectID
-        self.sam_web_uri = sam_web_uri
-        self.processID = processID
         self.processHASH = processHASH
-        self.dataTier = dataTier
-        self.dataStream = dataStream
 
+        ## the format string is used to create an output file name for stdout and err
         if self.formatString == None:
             formatString = "process_%s_%s_%%tc_%s_%s_%s.root"
 
-
+   ## actually run lar
     def DoLAr(self,cluster=0,process=0):
-        print ("check fcl",self.fcl,os.path.exists(self.fcl))
-        print ("reading",self.flist)
         stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%Z")
-        print (self.formatString)
-        print (self.projectID, cluster, process, os.path.basename(self.fcl).replace(".fcl",""))
+        if self.debug:
+            print ("check fcl",self.fcl,os.path.exists(self.fcl))
+            print ("reading",self.flist)
+            print (self.formatString)
+            print (self.projectID, cluster, process, os.path.basename(self.fcl).replace(".fcl",""))
         fname = self.formatString%(self.deliveryMethod,self.projectID, cluster, process, os.path.basename(self.fcl).replace(".fcl",""))
         self.oname = fname.replace(".root",".out").replace("%tc",stamp)
         self.ename = fname.replace(".root",".err").replace("%tc",stamp)
         ofile = open(self.oname,'w')
         efile = open(self.ename,'w')
 
+        # data dispatcher case
         if self.deliveryMethod == "dd":
             cmd = 'lar -c %s -s %s -n %i --nskip %i -o %s --sam-data-tier %s --sam-stream-name %s'%(self.fcl, self.flist, self.n, self.nskip, self.o, self.dataTier, self.dataStream)
-            print ("cmd = ",cmd)
+            print ("LArWrapper dd cmd = ",cmd)
             proc = subprocess.run(cmd, shell=True, stdout=ofile,stderr=efile)
+
+        # samweb case
         elif self.deliveryMethod == "samweb":
             lar_cmd = 'lar -c %s -n %i --sam-web-uri=%s --sam-process-id=%s --sam-application-family=%s \
              --sam-application-version=%s --sam-data-tier %s --sam-stream-name %s'%(self.fcl,\
@@ -81,18 +93,18 @@ class LArWrapper:
         efile.close()
         return self.returncode
 
+## here we get some information about how things went from the log file and other sources
     def LArResults(self):
+
         # get log info, match with replicas
         logparse = Loginator.Loginator(self.oname)
-
         logparse.readme()  # get info from the logfile
-
+# build up some information
         info = {"application_family":self.appFamily,"application_name":self.appName, "application_version":self.appVersion,"delivery_method":self.deliveryMethod,"workflow_method":self.workflowMethod,"project_id":self.projectID}
-        print ("delivery",self.deliveryMethod)
+        if self.debug: print ("delivery method",self.deliveryMethod)
         if self.deliveryMethod == "dd":
-
             info["dd_worker_id"]=self.processHASH
-
+            # dig around in replicas and see if we didn't use some of them, if so, tell the calling program
             if self.replicas != None:
                 unused_replicas = logparse.addreplicainfo(self.replicas)
             else:
@@ -100,17 +112,22 @@ class LArWrapper:
             unused_files = []
             for u in unused_replicas:
                 unused_files.append(u["namespace"]+":"+u["name"])
+
+            # ask metacat for info about each file
             logparse.addmetacatinfo()
             print ("files not used",unused_files)
+
+        # samweb info if not using dd
         elif self.deliveryMethod == "samweb":
             #unused_files = logparse.findmissingfiles(self.files)
             info["process_id"]=self.processID
             logparse.addsaminfo()
 
+        # heck if I know what to do.
         else:
             print ("unknown delivery mechanism")
 
-
+        # add in the information from the system and wrapper initialization
         logparse.addinfo(info)
         logparse.addsysinfo()
 
@@ -118,6 +135,7 @@ class LArWrapper:
         logparse.writeme()
         return unused_files
 
+## command line, explains the variables.
 if __name__ == "__main__":
     parser = ap()
     parser.add_argument('--delivery_method',required=True, type=str, help='["samweb","dd","wfs"]')
@@ -140,6 +158,7 @@ if __name__ == "__main__":
     parser.add_argument('-n', type=int, default=-1, help='number of events total to process')
     parser.add_argument('--nskip', type=int, default=0, help='number of events to skip before starting')
     parser.add_argument('--formatString', type = str, default='runLar_%s_%s_%%tc_%s_%s_%s.root',help='format string used by LarWrapper for logs')
+    parser.add_argument('--debug', type=bool, default=False)
     args = parser.parse_args()
 
     print (args)
@@ -148,7 +167,8 @@ if __name__ == "__main__":
         args.processHASH = os.environ("MYWORKERID")
     lar = LArWrapper(fcl=args.c, n=args.n, nskip = args.nskip, appFamily=args.appFamily,appName=args.appName,
     appVersion=os.getenv("DUNESW_VERSION"), deliveryMethod=args.delivery_method, workflowMethod=args.workflow_method,
-    processID = args.processID, processHASH = args.processHASH, projectID=args.projectID, sam_web_uri = args.sam_web_uri, formatString=args.formatString)
+    processID = args.processID, processHASH = args.processHASH, projectID=args.projectID, sam_web_uri = args.sam_web_uri,
+    debug = args.debug, formatString=args.formatString)
     returncode = lar.DoLAr(0, args.processID)
     unused_files = lar.LArResults()
     sys.exit(returncode)

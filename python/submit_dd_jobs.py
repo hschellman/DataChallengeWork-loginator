@@ -6,7 +6,7 @@ from data_dispatcher.api import DataDispatcherClient
 from argparse import ArgumentParser as ap
 import subprocess
 
-def create_project(dataset=None, namespace = None, query_limit=None, query_skip=None):
+def create_project(dataset=None, namespace = None, query_limit=None, query_skip=None, debug=False):
   mc_client = MetaCatClient('https://metacat.fnal.gov:9443/dune_meta_demo/app')
   dd_client = DataDispatcherClient(
     server_url='https://metacat.fnal.gov:9443/dune/dd/data',
@@ -21,10 +21,15 @@ def create_project(dataset=None, namespace = None, query_limit=None, query_skip=
 
   if query_skip: query += ' skip %s'%query_skip
   if query_limit: query += ' limit %s'%query_limit
+
+  print("------------------------createproject------------------------------")
   print("Start Project for :",query)
   #query metacat
+  print (mc_client.query(query))
+  print ("those were the files")
   query_files = [i for i in mc_client.query(query)]
-  #print(query_files)
+
+  if debug: print("create_project files",len(query_files))
 
   #check size
   nfiles_in_dataset = len(query_files)
@@ -52,23 +57,32 @@ if __name__ == '__main__':
   parser.add_argument('--njobs', type=int, default=1)
 
   parser.add_argument('--load_limit', type=int, default=None)
+  parser.add_argument('-c', type=str, default='eventdump.fcl')
   parser.add_argument('--fcl', type=str, default='eventdump.fcl')
-  parser.add_argument('--nevents', type=int, default=-1)
-  parser.add_argument('--output_str', type=str, default='"*reco.root"')
+  parser.add_argument('-n', type=int, default=-1,help="number of events for lar")
+  parser.add_argument('--output', type=str, default='"*reco*.root"',help='lar output argument "*reco*.root"')
   parser.add_argument('--output_dataset', type=str, default='dd-interactive-tests')
   parser.add_argument('--output_namespace', type=str, default='dc4-hd-protodune')
   parser.add_argument('--metacat_user', type=str, default='schellma')
   parser.add_argument('--blacklist', type=str, nargs='+')
-  parser.add_argument('--project', type=int, default=None)
+  parser.add_argument('--projectID', type=int, default=None)
   parser.add_argument('--dry_run', action='store_true')
   parser.add_argument('--appFamily', type=str)
   parser.add_argument('--appVersion', type=str)
   parser.add_argument('--appName', type=str)
+  parser.add_argument('--debug',type=bool,default=False)
 
   args = parser.parse_args()
 
+  print ("submit_dd_jobs.py arguments")
+  theargs = vars(args)
+  for a in theargs:
+    print (a,theargs[a])
+  if args.c == None:
+    args.c = args.fcl
+
   if args.appName == None:
-      appName = args.fcl.replace(".fcl","")
+      appName = args.c.replace(".fcl","")
   else:
       appName = args.appName
 
@@ -91,7 +105,7 @@ if __name__ == '__main__':
 
   print(args.blacklist)
 
-  if (not args.project) and args.dataset:
+  if (not args.projectID) and args.dataset:
     ##build up query
     if args.namespace == None:
         query = 'files from %s ordered'%(args.dataset)
@@ -120,10 +134,10 @@ if __name__ == '__main__':
       print('Only making project. Exiting now')
       exit()
 
-  elif args.project and not (args.dataset):
-    dd_proj_id = args.project
+  elif args.projectID and not (args.dataset):
+    dd_proj_id = args.projectID
   else:
-    sys.stderr.write("Need to provide project OR dataset & optional namespace\n")
+    sys.stderr.write("submit_dd_jobs: Need to provide project OR dataset & optional namespace\n")
     sys.exit(1)
 
   if args.njobs > 10000:
@@ -134,11 +148,11 @@ if __name__ == '__main__':
   print(njobs)
   count = 0
   for nj in njobs:
-    cmd =  'fife_launch -c ddconfig.cfg ' \
+    cmd =  'fife_launch -c $TESTME/batch/ddconfig.cfg ' \
           f'-Oglobal.load_limit={args.load_limit} ' \
-          f'-Oglobal.project={dd_proj_id} ' \
-          f'-Oglobal.nevents={args.nevents} ' \
-          f'-Oglobal.output_str={args.output_str} ' \
+          f'-Oglobal.projectID={dd_proj_id} ' \
+          f'-Oglobal.n={args.n} ' \
+          f'-Oglobal.output={args.output} ' \
           f'-Oglobal.output_dataset={args.output_dataset} ' \
           f'-Oglobal.output_namespace={args.output_namespace} ' \
           f'-Osubmit.N={nj} ' \
@@ -146,7 +160,8 @@ if __name__ == '__main__':
           f'-Oglobal.appFamily={args.appFamily} '\
           f'-Oglobal.appName={args.appName} '\
           f'-Oglobal.appVersion={args.appVersion} '\
-          f'-Oglobal.fcl={args.fcl} '
+          f'-Oglobal.fcl={args.c} '\
+          f'-Oglobal.debug={args.debug}'
 
     if args.blacklist:
       cs_blacklist = ','.join(args.blacklist)
@@ -158,13 +173,13 @@ if __name__ == '__main__':
     #cmd2 = ('fife_launch -c byhand.cfg '
     #        '-Oglobal.load_limit=%i '
     #        '-Oglobal.project=%s '
-    #        '-Oglobal.nevents=%i '
+    #        '-Oglobal.n=%i '
     #        '-Oglobal.output_str=%s '
     #        '-Oglobal.output_dataset=%s '
     #        '-Oglobal.output_namespace=%s '
     #        '-Osubmit.N=%i '
     #        '-Oglobal.metacat_user=%s '
-    #        )%(args.load_limit, dd_proj_id, args.nevents,
+    #        )%(args.load_limit, dd_proj_id, args.n,
     #           args.output_str, args.output_dataset, args.output_namespace,
     #           nj, args.metacat_user)
 
@@ -176,13 +191,13 @@ if __name__ == '__main__':
     #subprocess.run(('fife_launch -c byhand.cfg '
     #                '-Oglobal.load_limit=%i '
     #                '-Oglobal.project=%s '
-    #                '-Oglobal.nevents=%i '
+    #                '-Oglobal.n=%i '
     #                '-Oglobal.output_str=%s '
     #                '-Oglobal.output_dataset=%s '
     #                '-Oglobal.output_namespace=%s '
     #                '-Osubmit.N=%i '
     #                '-Oglobal.metacat_user=%s '
-    #               )%(args.load_limit, dd_proj_id, args.nevents,
+    #               )%(args.load_limit, dd_proj_id, args.n,
     #                  args.output_str, args.output_dataset, args.output_namespace,
     #                  nj, args.metacat_user),
     #               shell=True)

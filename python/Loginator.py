@@ -11,19 +11,24 @@
 # @file Loginator.py
 
 import string,time,datetime,json,os,sys
+
+## try to set up samweb if available
 if "SAM_EXPERIMENT" in os.environ:
     import samweb_client
 
 
 from metacat.webapi import MetaCatClient
-import string,datetime#,dateutil
+import string,datetime
 from datetime import date,timezone,datetime
-#from dateutil import parser
-
+ 
 
 DEBUG=False
 
+##  Loginator class should not care what access method you are using
+
 class Loginator:
+
+## initialization, requires an Art logfile to parse and creates a template json file
 
     def __init__(self,logname):
         if not os.path.exists(logname):
@@ -33,7 +38,7 @@ class Loginator:
         self.logfile = open(logname,'r')
         self.outobject ={}
         self.info = self.getsysinfo()
-        self.tags = ["Opened input file", "Closed input file","MemReport  VmPeak","CPU","Events total"]
+        self.tags = ["Opened input file", "Closed input file","MemReport  VmPeak","CPU","Events total","Initiating request to open input file"]
         self.template = {
              # job attributes
             "user":None,  # (who's request is this)
@@ -50,6 +55,7 @@ class Loginator:
             "delivery_method":None, #(samweb/dd/wfs)
             "workflow_method":None,
             "access_method":None, #(stream/copy)
+            "timestamp_for_request":None,
             "timestamp_for_start":None,  #
             "timestamp_for_end":None,  #
             "application_family":None,  #
@@ -74,13 +80,14 @@ class Loginator:
             "event_count":None
         }
 
+    ## utility to print the environment
     def envPrinter(self):
         env = os.environ
         for k in env:
             print ("env ",k,"=",env[k])
 
 
-## return the first tag or None in a line
+## look at a line of text and find the first tag from self.tags in the line
     def findme(self,line):
         for tag in self.tags:
             if tag in line:
@@ -88,6 +95,7 @@ class Loginator:
                 return tag
         return None
 
+## safe access for a dictionary element, returns None rather than failing
     def getSafe(self,dict,envname):
         if envname in dict:
             if DEBUG: print ("found ",envname)
@@ -96,7 +104,7 @@ class Loginator:
             return None
 
 
-## get system info for the full job
+## get system info for the running process, shared with all files processed
     def getsysinfo(self):
         info = {}
         # get a bunch of system thingies.
@@ -111,34 +119,47 @@ class Loginator:
         #info["POMSINFO"] = os.getenv("poms_data")  # need to parse this further
         return info
 
+## add that system info to the record
     def addsysinfo(self):
         self.addinfo(self.getsysinfo())
 
 ## read in the log file and parse it, add the info
+# lines with specific tags get logged as file or end of job activities
     def readme(self):
         object = {}
         memdata = None
         cpudata = None
         walldata = None
         totalevents = None
+         
         for line in self.logfile:
             tag = self.findme(line)
             if DEBUG: print (tag,line)
+            
+            # not relevant, skip
             if tag == None:
                 continue
+            
+            # memory from end of job
             if "MemReport  VmPeak" == tag:
                 memdata = line.split("VmHWM = ")[1].strip()
+                
+            # cpu/walltime from end of job
             if "CPU" == tag:
                 timeline = line.strip().split(" ")
                 if len(timeline) < 7:
                     continue
                 cpudata = timeline[3]
                 walldata = timeline[6]
+           
+            # total events processedf from end of job
             if "Events total" in tag:
                 eventline  = line.strip().split(" ")
                 if len(eventline) < 11:
                     continue
                 totalevents = eventline[4]
+                
+            # file request/open/close activities
             if "file" in tag:
                 data = line.split(tag)
                 filefull = data[1].strip().replace('"','')
@@ -146,11 +167,27 @@ class Loginator:
                 filename = os.path.basename(filefull).strip()
                 filepath = os.path.dirname(filefull).strip()
                 dups = 0
+                
+                # start - ask for file
+                if "Initiating" in tag:
+                    localobject = self.template.copy()
+                    localobject["final_state"] = "Started"
+                    localobject["timestamp_for_request"] = timestamp
+                    localobject["final_state"] = "Requested"
+                    localobject["path"]=filepath
+                    localobject["file_name"] = filename
+                    if "root" in filepath[0:10]:
+                        if DEBUG: print ("I am root")
+                        tmp = filepath.split("//")
+                        localobject["rse"] = tmp[1]
+                        localobject["access_method"] = "xroot"
+                    for thing in self.info:
+                        localobject[thing] = self.info[thing]
+                # open the file
                 if "Opened" in tag:
+                    
                     localobject = {}
                     if DEBUG: print ("filename was",filename,line)
-
-                    localobject = self.template.copy()
                     localobject["timestamp_for_start"] = timestamp
                     start = timestamp
                     localobject["path"]=filepath
@@ -164,6 +201,8 @@ class Loginator:
                     for thing in self.info:
                         localobject[thing] = self.info[thing]
                     localobject["final_state"] = "Opened"
+                    
+                # Close the file
                 if "Closed" in tag:
                     localobject["timestamp_for_end"] = timestamp
                     localobject["duration"]=self.duration(start,timestamp)
@@ -171,8 +210,8 @@ class Loginator:
                 object[filename] = localobject
                 continue
 
-                #print ("mem",memdata,filename)
-        # add the memory info if available
+                
+        # add the job info to all file records if available
         for thing in object:
             if memdata != None: object[thing]["job_real_memory"]=memdata
             if walldata != None: object[thing]["job_wall_time"]=walldata
@@ -181,6 +220,7 @@ class Loginator:
             #print ("mem",object[thing]["real_memory"])
         self.outobject=object
 
+## add information from a dictionary to the record
     def addinfo(self,info):
         for s in info:
             if s in self.outobject:
@@ -190,6 +230,7 @@ class Loginator:
                     self.outobject[f][s] = info[s]
                     if DEBUG: print ("adding",s,info[s])
 
+## add input file information from sam to the record
     def addsaminfo(self):
         if "SAM_EXPERIMENT" in os.environ:
             import samweb_client
@@ -210,6 +251,7 @@ class Loginator:
                 self.outobject[f]["run_type"] = run[2]
                 break
 
+## add file information from metacat to the record
     def addmetacatinfo(self,defaultNamespace=None):
         os.environ["METACAT_SERVER_URL"]="https://metacat.fnal.gov:9443/dune_meta_demo/app"
         mc_client = MetaCatClient('https://metacat.fnal.gov:9443/dune_meta_demo/app')
@@ -240,6 +282,7 @@ class Loginator:
             self.outobject[f]["fid"]=meta["fid"]
             self.outobject[f]["namespace"]=namespace
 
+## get some details from the data dispatcher on file locations
     def addreplicainfo(self,replicas,test=False):
         notfound = []
         for f in self.outobject:
@@ -262,6 +305,8 @@ class Loginator:
 
         return notfound
 
+## add information from data dispatcher on files reserved for this process to the record.
+# can use this information to mark unused files
     def findmissingfiles(self,files):
         notfound = []
 
@@ -287,10 +332,9 @@ class Loginator:
         return notfound
 
 
-#    def metacatinfo(self,namespace,filename):
-#        print ("do something here")
 
 
+## dump info to json file
     def writeme(self):
         result = []
         for thing in self.outobject:
@@ -301,6 +345,7 @@ class Loginator:
             result.append(outname)
         return result
 
+## utility to parse timestamps
     def human2number(self,stamp):
         #15-Nov-2022 17:24:41 CST https://docs.python.org/3/library/time.html#time.strftime
         format = "%d-%b-%Y %H:%M:%S"
@@ -312,25 +357,25 @@ class Loginator:
             stamp += 3600
         return (thetime-epoch).total_seconds()
 
+## utility to change timestamps into time delta
     def duration(self,start,end):
         t0 = self.human2number(start)
         t1 = self.human2number(end)
         return t1-t0
 
 
-
+## test this
 def test():
     parse = Loginator(sys.argv[1])
     #print ("looking at",sys.argv[1])
     parse.readme()
     parse.addsysinfo()
-   # parse.addsaminfo()
     parse.addreplicainfo([])
     if "SAM_EXPERIMENT" in os.environ:
         parse.addsaminfo()
     else:
         parse.addmetacatinfo("pdsp_det_reco")
-    #parse.addmetacatinfo("dc4-hd-protodune") # argument is there for testing when you don't have replica list.
+            #parse.addmetacatinfo("dc4-hd-protodune") # argument is there for testing when you don't have replica list.
     parse.writeme()
 
 
