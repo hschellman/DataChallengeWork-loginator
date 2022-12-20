@@ -461,7 +461,7 @@ if __name__ == '__main__':
                              appName=args.appName,
                              appVersion=args.appVersion,
                              workflowMethod=args.workflowMethod,
-                             namespace=args.namespace
+                             namespace=args.namespace,
                              dataset=args.dataset)
     dd_interface.Login(args.user)
     dd_interface.SetWorkerID()
