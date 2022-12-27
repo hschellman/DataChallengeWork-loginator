@@ -59,6 +59,7 @@ class LArWrapper:
    ## actually run lar
     def DoLAr(self,cluster=0,process=0):
         stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%Z")
+        fclname=os.path.basename(self.fcl)
         if self.debug:
             print ("check fcl",self.fcl,os.path.exists(self.fcl))
             print ("reading",self.flist)
@@ -100,7 +101,8 @@ class LArWrapper:
         logparse = Loginator.Loginator(self.oname)
         logparse.readme()  # get info from the logfile
 # build up some information
-        info = {"application_family":self.appFamily,"application_name":self.appName, "application_version":self.appVersion,"delivery_method":self.deliveryMethod,"workflow_method":self.workflowMethod,"project_id":self.projectID}
+        info = {"application_family":self.appFamily,"application_name":self.appName, "application_version":self.appVersion,\
+        "delivery_method":self.deliveryMethod,"workflow_method":self.workflowMethod,"project_id":self.projectID,"fcl":os.path.basename(self.fcl)}
         if self.debug: print ("delivery method",self.deliveryMethod)
         if self.deliveryMethod == "dd":
             info["dd_worker_id"]=self.processHASH

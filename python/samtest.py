@@ -7,7 +7,23 @@ samweb = samweb_client.SAMWebClient(experiment='dune')
 
 TEST = True
 def testProject(defname="schellma-run5141-PDSPProd4", maxFiles=5, appFamily="samtest", appName="test", appVersion=None, fcl="eventdump.fcl",method="samweb",n=-1,nskip=0,dataTier="out1:sam-user",dataStream="out1:test"):
-    appVersion = os.environ["DUNESW_VERSION"]
+    """
+    Run a test sam project
+    :param defname: Dataset definition
+    :type defname: str
+    :param maxFiles: Optional Maximum number of files to deliver to processID
+    :type maxFiles: int
+    :param appFamily: Optional Information about process
+    :param appVersion: Optional Information about process
+    :param appName: Optional Information about process
+    :param kind: Optional "kind" of ingredients.
+    :type kind: list[str] or None
+    :return: Return code from LAr
+    :rtype: int
+
+    """
+    if appVersion == None:
+        appVersion = os.environ["DUNESW_VERSION"]
     projectname = samweb.makeProjectName(defname)
     projectinfo = samweb.startProject(projectname, defname)
     #print (projectinfo)
