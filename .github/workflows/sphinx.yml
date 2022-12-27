@@ -7,8 +7,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-      with:
-        repository: 'hschellman/develop'
     - name: Build HTML
       uses: ammaraskar/sphinx-action@master
     - name: Upload artifacts
