@@ -38,8 +38,6 @@ def testProject(defname="schellma-run5141-PDSPProd4", maxFiles=5, appFamily="sam
     :param nskip: number of events to skip before starting
     :type nskip: int
 
-    :param
-
     :return: Return code from LAr
     :rtype: int
 
