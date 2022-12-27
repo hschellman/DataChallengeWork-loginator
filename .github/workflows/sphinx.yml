@@ -7,7 +7,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-      repository: Dec152022
+      with:
+        repository: Dec152022
     - name: Build HTML
       uses: ammaraskar/sphinx-action@master
     - name: Upload artifacts
