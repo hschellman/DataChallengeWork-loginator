@@ -6,18 +6,40 @@ from argparse import ArgumentParser as ap
 samweb = samweb_client.SAMWebClient(experiment='dune')
 
 TEST = True
-def testProject(defname="schellma-run5141-PDSPProd4", maxFiles=5, appFamily="samtest", appName="test", appVersion=None, fcl="eventdump.fcl",method="samweb",n=-1,nskip=0,dataTier="out1:sam-user",dataStream="out1:test"):
+def testProject(defname="schellma-run5141-PDSPProd4", maxFiles=5, appFamily="samtest", appName="test", appVersion=None,\
+ fcl="eventdump.fcl",method="samweb",n=-1,nskip=0,dataTier="out1:sam-user",dataStream="out1:test"):
     """
     Run a test sam project
+
     :param defname: Dataset definition
     :type defname: str
+
     :param maxFiles: Optional Maximum number of files to deliver to processID
     :type maxFiles: int
+
     :param appFamily: Optional Information about process
+    :type appFamily: str
+
     :param appVersion: Optional Information about process
+    :type appVersion: str
+
     :param appName: Optional Information about process
-    :param kind: Optional "kind" of ingredients.
-    :type kind: list[str] or None
+    :type appName: str
+
+    :param fcl: name of fcl file to run
+    :type fcl: str
+
+    :param method: data access method - should be samweb
+    :type method: str
+
+    :param n: number of events to process
+    :type n: int
+
+    :param nskip: number of events to skip before starting
+    :type nskip: int
+
+    :param
+
     :return: Return code from LAr
     :rtype: int
 
