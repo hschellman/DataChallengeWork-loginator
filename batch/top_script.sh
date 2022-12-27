@@ -16,12 +16,12 @@ while [[ $# -gt 0 ]]; do
     --namespace)
       NAMESPACE=$2
       shift
-      shift 
+      shift
       ;;
-    --fcl)
+    -c)
       FCL=$2
       shift
-      shift 
+      shift
       ;;
     -n)
       N=$2
@@ -31,37 +31,37 @@ while [[ $# -gt 0 ]]; do
     --load_limit)
       LOADLIMIT=$2
       shift
-      shift 
+      shift
       ;;
     --user)
       USER=$2
       shift
-      shift 
+      shift
       ;;
     --metacat_user)
       METACATUSER=$2
       shift
-      shift 
-      ;;
-    --project)
-      PROJECT=$2
       shift
-      shift 
+      ;;
+    --projectID)
+      PROJECTID=$2
+      shift
+      shift
       ;;
     --timeout)
       DDTIMEOUT=$2
       shift
-      shift 
+      shift
       ;;
     --wait_time)
       WAITTIME=$2
       shift
-      shift 
+      shift
       ;;
     --wait_limit)
       WAITLIMIT=$2
       shift
-      shift 
+      shift
       ;;
     --output)
       OUTPUT=$2
@@ -98,6 +98,11 @@ while [[ $# -gt 0 ]]; do
       shift
       shift
       ;;
+    --debug)
+      DEBUG=$2
+      shift
+      shift
+      ;;
     --rse)
       output_rses+=($2)
       shift
@@ -118,11 +123,13 @@ echo $NAMESPACE
 
 logname=loginator-${NAMESPACE}_${PROCESS}_${CLUSTER}_`date +%F_%H_%M_%S`
 
-export PYTHONPATH=${CONDOR_DIR_INPUT}/python:${PYTHONPATH}
+export PYTHONPATH=${CONDOR_DIR_INPUT}/loginator/python:${PYTHONPATH}
 
 ###Setting up dunesw/Data Dispatcher/MetaCat and running lar
 (
-setup dunesw v09_55_01d00 -q e20:prof;
+
+echo " trying to run"
+setup dunesw ${APPVERSION} -q e20:prof;
 
 python -m venv venv
 source venv/bin/activate
@@ -146,8 +153,9 @@ ls -lrt
 echo "the input directory"
 
 ls -lrtR $CONDOR_DIR_INPUT
+export IFDH_DEBUG=0
 
-export FHICL_FILE_PATH=${CONDOR_DIR_INPUT}/fcl:${FHICL_FILE_PATH}
+export FHICL_FILE_PATH=${CONDOR_DIR_INPUT}/loginator/fcl:${FHICL_FILE_PATH}
 
 #echo "try to really mean it about the FCL since putting it in the path doesn't seem to do it for me"
 
@@ -157,8 +165,8 @@ echo "I will now run run_lar with fcl file " $FCL
 
 python -m run_lar \
   --namespace $NAMESPACE \
-  --fcl $FCL \
-  --project $PROJECT \
+  -c $FCL \
+  --projectID $PROJECTID \
   --load_limit $LOADLIMIT \
   --user $USER \
   -n $N \
@@ -166,15 +174,23 @@ python -m run_lar \
   --appName $APPNAME \
   --appVersion $APPVERSION \
   --nskip $nskip \
-  --workflowmethod batch
+  --workflowMethod batch \
+  --debug $DEBUG
   #> ${logname}.out 2>${logname}.err
 
 returncode=$?
 #echo "Return code: " $returncode >> ${logname}.out 2>>${logname}.err
 echo "Return code: " $returncode
+
+ls
+echo "look at outputs"
+cat *.out
+
+echo "look at error"
+cat *.err
 export SCRATCH_DIR=/pnfs/dune/scratch/users
 #setup ifdh
-export OUTDIR=${SCRATCH_DIR}/${USER}/ddtest/${PROJECT}
+export OUTDIR=${SCRATCH_DIR}/${USER}/ddtest/${PROJECTID}
 
 ifdh mkdir_p ${OUTDIR}
 export IFDH_DEBUG=0
@@ -290,7 +306,7 @@ fi
 #done
 
 #  FILESIZE=`stat -c%s ${logname}.out`
-#  cat << EOF > ${logname}.out.json 
+#  cat << EOF > ${logname}.out.json
 #  [
 #    {
 #      "size": ${FILESIZE},
@@ -312,7 +328,7 @@ fi
 #
 #
 #  FILESIZE=`stat -c%s ${logname}.err`
-#  cat << EOF > ${logname}.err.json 
+#  cat << EOF > ${logname}.err.json
 #  [
 #    {
 #      "size": ${FILESIZE},
