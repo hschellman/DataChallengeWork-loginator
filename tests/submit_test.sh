@@ -1,8 +1,3 @@
 # submission tests
 source tarme.sh  # make the tar file up-to-date
-python submit_dd_jobs.py --dataset=schellma:run5141recentReco --query_limit=10 --fcl=test.fcl --nevents=400 --load_limit=4 --appFamily=LArSoft --appName=pdsp_det_reco --appVersion=${DUNESW_VERSION}
-
-#--dataset DATASET] [--namespace NAMESPACE] [--query_limit QUERY_LIMIT]
-#                         [--query_skip QUERY_SKIP] [--njobs NJOBS] [--load_limit LOAD_LIMIT] [--fcl FCL] [--nevents NEVENTS]
-#                         [--output_str OUTPUT_STR] [--output_dataset OUTPUT_DATASET] [--output_namespace OUTPUT_NAMESPACE]
-#                         [--metacat_user METACAT_USER] [--blacklist BLACKLIST [BLACKLIST ...]] [--project PROJECT] [--dry_run]
+python -m submit_dd_jobs --debug=True --dataset=schellma:run5141recentReco --query_limit=100 -c eventdump.fcl -n 1 --njobs=1  --load_limit=2 --appFamily=LArSoft --appName=eventdump --appVersion=${DUNESW_VERSION}
