@@ -13,7 +13,7 @@ Mods for logging outputs by H. Schellman, 2022
 '''
 
 # makes it easier to build docs on mac without invoking the real code
-if not "apple" in os.environ["HOST"]:
+if not "HOST" in os.environ or not "apple" in os.environ["HOST"]:
 
     from data_dispatcher.api import DataDispatcherClient
     from data_dispatcher.api import APIError
@@ -77,10 +77,10 @@ class DDInterface:
   ''' Interface to the Data Dispatcher
   '''
   def __init__(self, debug=False, dataset=None, namespace=None, lar_limit=0, timeout=120, wait_time=60, wait_limit=5,\
-   appFamily=None, appNamse=None, appVersion=None, workflowMethod="dd"):
+   appFamily=None, appName=None, appVersion=None, workflowMethod="dd"):
     '''
     Main interface for the data Dispatcher
-    
+
     :param debug: add printout and send stdout to console instead of a files
     :type debug: bool
 
@@ -421,36 +421,36 @@ class DDInterface:
     self.SaveFileDIDs()
     return returncode
 
-    """ driver test """
+""" driver test """
 
-    def driver(args):
-        """ driver for run_lar
-        .. param: args (parsed arguments)
-        .. type: []
-        .. return: lar return code
-        .. rtype: int
-        """
+def driver(args):
+    """ driver for DDInterface
+    .. param: args (parsed arguments)
+    .. type: []
+    .. return: lar return code
+    .. rtype: int
+    """
 
-        dd_interface = DDInterface( lar_limit=args.load_limit,
-                                 timeout=args.timeout,
-                                 wait_time=args.wait_time,
-                                 wait_limit=args.wait_limit,
-                                 appFamily=args.appFamily,
-                                 appName=args.appName,
-                                 appVersion=args.appVersion,
-                                 workflowMethod=args.workflowMethod,
-                                 namespace=args.namespace,
-                                 dataset=args.dataset)
-        dd_interface.Login(args.user)
-        dd_interface.SetWorkerID()
-        print(os.environ['MYWORKERID'])
-        dd_interface.AttachProject(dd_proj_id)
-        #dd_interface.dump_project(dd_proj_id)
-        dd_interface.LoadFiles()
-        dd_interface.BuildFileListString()
-        retcode = dd_interface.RunLAr(fcl=args.c, n=args.n, nskip=args.nskip)
-        dd_interface.dump_project(dd_proj_id)
-        return retcode
+    dd_interface = DDInterface( lar_limit=args.load_limit,
+                             timeout=args.timeout,
+                             wait_time=args.wait_time,
+                             wait_limit=args.wait_limit,
+                             appFamily=args.appFamily,
+                             appName=args.appName,
+                             appVersion=args.appVersion,
+                             workflowMethod=args.workflowMethod,
+                             namespace=args.namespace,
+                             dataset=args.dataset)
+    dd_interface.Login(args.user)
+    dd_interface.SetWorkerID()
+    print(os.environ['MYWORKERID'])
+    dd_interface.AttachProject(dd_proj_id)
+    #dd_interface.dump_project(dd_proj_id)
+    dd_interface.LoadFiles()
+    dd_interface.BuildFileListString()
+    retcode = dd_interface.RunLAr(fcl=args.c, n=args.n, nskip=args.nskip)
+    dd_interface.dump_project(dd_proj_id)
+    return retcode
 
 if __name__ == '__main__':
     ''' run_lar
@@ -487,7 +487,7 @@ if __name__ == '__main__':
 
 
     print("-----------------------------------------------------------------------------------")
-    print ("run_lar arguments:\n")
+    print ("DDInterface arguments:\n")
     theargs = vars(args)
     for a in theargs:
         print(a,theargs[a])
