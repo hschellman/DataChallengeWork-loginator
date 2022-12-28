@@ -15,3 +15,7 @@ LArSoft
 -------
 
   https://larsoft.org/training/
+
+
+:doc:`Notes`
+------------
