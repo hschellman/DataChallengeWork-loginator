@@ -4,4 +4,5 @@ API
 .. autosummary::
     :toctree: generated
 
-    samtest
+        samtest
+        run_lar
