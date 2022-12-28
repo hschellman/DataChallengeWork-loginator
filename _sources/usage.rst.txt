@@ -9,6 +9,10 @@ To use Loginator, first install from github and then run setup_hms.sh after modi
 Choose your delivery method
 ---------------------------
 
-- :doc: `LArWrapper` and  :doc `DDInterface` set up data delivery projects using different interfaces and run over multiple files
+:doc:`generated/LArWrapper` and  :doc:`generated/DDInterface` set up data delivery projects using different interfaces and run over multiple files
 
-.. include: Modules.rst
+
+Look at the tests
+-----------------
+
+-:doc:`tests`
