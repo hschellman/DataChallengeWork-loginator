@@ -47,30 +47,30 @@ def create_project(dataset=None, namespace = None, query_limit=None, query_skip=
 
 
 
-if __name__ == '__main__':
+def main():
   parser = ap()
-  parser.add_argument('--project_only', action='store_true')
-  parser.add_argument('--dataset', type=str, default=None)
-  parser.add_argument('--namespace', type=str, default=None)
-  parser.add_argument('--query_limit', type=str, default=None)
-  parser.add_argument('--query_skip', type=str, default=None)
-  parser.add_argument('--njobs', type=int, default=1)
+  parser.add_argument('--project_only', action='store_true',help='just start the project')
+  parser.add_argument('--dataset', type=str, default=None,help='dataset to run over')
+  parser.add_argument('--namespace', type=str, default=None,help='file namespace within dataset (deprecated)')
+  parser.add_argument('--query_limit', type=str, default=None,help='number of files to get in the query')
+  parser.add_argument('--query_skip', type=str, default=None,help='number of files to skip in the query')
+  parser.add_argument('--njobs', type=int, default=1,help='number of jobs to submit')
 
-  parser.add_argument('--load_limit', type=int, default=None)
-  parser.add_argument('-c', type=str, default='eventdump.fcl')
-  parser.add_argument('--fcl', type=str, default='eventdump.fcl')
+  parser.add_argument('--load_limit', type=int, default=None,help='number of files to give each process')
+  parser.add_argument('-c', type=str, default='eventdump.fcl',help='the fcl file for art/lar')
+  parser.add_argument('--fcl', type=str, default='eventdump.fcl',help='the fcl file for art/lar')
   parser.add_argument('-n', type=int, default=-1,help="number of events for lar")
   parser.add_argument('--output', type=str, default='"*reco*.root"',help='lar output argument "*reco*.root"')
-  parser.add_argument('--output_dataset', type=str, default='dd-interactive-tests')
-  parser.add_argument('--output_namespace', type=str, default='dc4-hd-protodune')
-  parser.add_argument('--metacat_user', type=str, default='schellma')
-  parser.add_argument('--blacklist', type=str, nargs='+')
-  parser.add_argument('--projectID', type=int, default=None)
-  parser.add_argument('--dry_run', action='store_true')
+  parser.add_argument('--output_dataset', type=str, default='test')
+  parser.add_argument('--output_namespace', type=str, default='test')
+  parser.add_argument('--metacat_user', type=str, default=os.getenv("USER"))
+  parser.add_argument('--blacklist', type=str, nargs='+',help='bad sites to avoid')
+  parser.add_argument('--projectID', type=int, default=None,help='join an existing project - alternative to dataset')
+  parser.add_argument('--dry_run', action='store_true',help='just to setup')
   parser.add_argument('--appFamily', type=str)
   parser.add_argument('--appVersion', type=str)
   parser.add_argument('--appName', type=str)
-  parser.add_argument('--debug',type=bool,default=False)
+  parser.add_argument('--debug',type=bool,default=False,help='do more printout')
 
   args = parser.parse_args()
 
@@ -170,37 +170,8 @@ if __name__ == '__main__':
     if args.dry_run:
       cmd += '--dry_run '
     print("submit command:",cmd)
-    #cmd2 = ('fife_launch -c byhand.cfg '
-    #        '-Oglobal.load_limit=%i '
-    #        '-Oglobal.project=%s '
-    #        '-Oglobal.n=%i '
-    #        '-Oglobal.output_str=%s '
-    #        '-Oglobal.output_dataset=%s '
-    #        '-Oglobal.output_namespace=%s '
-    #        '-Osubmit.N=%i '
-    #        '-Oglobal.metacat_user=%s '
-    #        )%(args.load_limit, dd_proj_id, args.n,
-    #           args.output_str, args.output_dataset, args.output_namespace,
-    #           nj, args.metacat_user)
-
-    #print(cmd == cmd2)
-    #print(cmd)
-    #print(cmd2)
 
     subprocess.run(cmd, shell=True)
-    #subprocess.run(('fife_launch -c byhand.cfg '
-    #                '-Oglobal.load_limit=%i '
-    #                '-Oglobal.project=%s '
-    #                '-Oglobal.n=%i '
-    #                '-Oglobal.output_str=%s '
-    #                '-Oglobal.output_dataset=%s '
-    #                '-Oglobal.output_namespace=%s '
-    #                '-Osubmit.N=%i '
-    #                '-Oglobal.metacat_user=%s '
-    #               )%(args.load_limit, dd_proj_id, args.n,
-    #                  args.output_str, args.output_dataset, args.output_namespace,
-    #                  nj, args.metacat_user),
-    #               shell=True)
 
     if count < len(njobs)-1:
       print('Sleeping')
@@ -208,3 +179,6 @@ if __name__ == '__main__':
         sleep(2)
         print(f'{i*2}/120', end='\r')
     count += 1
+
+if __name__ == '__main__':
+    main()

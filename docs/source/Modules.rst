@@ -1,6 +1,11 @@
 Python APIs
 -----------
 
+samweb
+******
+
+.. autofunction:: samtest::testProject
+
 DDInterface
 ***********
 

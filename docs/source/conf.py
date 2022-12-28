@@ -49,7 +49,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
-    'sphinxcontrib.programoutput',
+    #'sphinxcontrib.programoutput',  # not available to github
 ]
 
 autoclass_content = "both"  # from ivmfnal
