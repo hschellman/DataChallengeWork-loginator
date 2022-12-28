@@ -7,6 +7,12 @@ import datetime
 import requests
 import submit_dd_jobs
 
+''' Data Dispatcher interface
+Mainly written by Jacob Calcutt, 2022
+Mods for logging outputs by H. Schellman, 2022
+'''
+
+# makes it easier to build docs on mac without invoking the real code
 if not "apple" in os.environ["HOST"]:
 
     from data_dispatcher.api import DataDispatcherClient
@@ -68,11 +74,13 @@ def call_and_retry_return(func):
 
 
 class DDInterface:
-
+  ''' Interface to the Data Dispatcher
+  '''
   def __init__(self, debug=False, dataset=None, namespace=None, lar_limit=0, timeout=120, wait_time=60, wait_limit=5,\
-   appFamily=None, appName=None, appVersion=None, workflowMethod="dd"):
+   appFamily=None, appNamse=None, appVersion=None, workflowMethod="dd"):
     '''
     Main interface for the data Dispatcher
+    
     :param debug: add printout and send stdout to console instead of a files
     :type debug: bool
 

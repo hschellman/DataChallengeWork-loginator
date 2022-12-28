@@ -69,70 +69,72 @@ def call_and_retry_return(func):
 
 class DDInterface:
 
-  def __init__(self, debug=False, dataset=None, namespace=None, lar_limit=0, timeout=120, wait_time=60, wait_limit=5,\
+"""
+Main interface for the data Dispatcher
+:param debug: add printout and send stdout to console instead of a files
+:type debug: bool
+
+:param dataset: data dispatcher dataset did
+:type dataset: stream
+
+:param lar_limit: maximum number of files to deliver
+:type lar_limit: int
+
+:param appFamily: Optional Information about process
+:type appFamily: str
+
+:param appVersion: Optional Information about process
+:type appVersion: str
+
+:param appName: Optional Information about process
+:type appName: str
+
+:return: the lar return code
+:rtype: int
+"""
+    def __init__(self, debug=False, dataset=None, namespace=None, lar_limit=0, timeout=120, wait_time=60, wait_limit=5,\
    appFamily=None, appName=None, appVersion=None, workflowMethod="dd"):
-    '''
-    Main interface for the data Dispatcher
-    :param debug: add printout and send stdout to console instead of a files
-    :type debug: bool
 
-    :param dataset: data dispatcher dataset did
-    :type dataset: stream
 
-    :param lar_limit: maximum number of files to deliver
-    :type lar_limit: int
 
-    :param appFamily: Optional Information about process
-    :type appFamily: str
+self.dataset = dataset
+self.limit = 1#limit
+self.namespace = namespace
 
-    :param appVersion: Optional Information about process
-    :type appVersion: str
+''' namespace is an extra qualifier used in tests - deprecated '''
+if namespace == None:
+    self.query = '''files from %s limit %i'''%(self.dataset, self.limit)
+else:
+    query_args = (self.dataset, self.namespace, self.limit)
+    self.query = '''files from %s where namespace="%s" limit %i'''%query_args  # this is not a good idea
+if self.debug: print ("DDInterface: the query is:",self.query)
+self.worker_timeout = 3600*5
+self.lar_limit = lar_limit
+self.proj_id = -1
+self.proj_exists = False
+self.proj_state = None
+self.loaded_files = [] # list of files with all the replicas for worker to choose from
+self.input_replicas = []  # list of the replicas actually sent to Lar
+self.loaded_file_uris = []
+self.loaded = False
+self.dd_timeout = timeout
+self.wait_time = wait_time
+self.max_wait_attempts = wait_limit
+self.hit_timeout = False
+self.lar_return = -1
+self.lar_file_list = ''
+self.n_waited = 0
+self.next_failed = False
+self.next_replicas = []
+self.appFamily = appFamily
+self.appName = appName
+self.appVersion = appVersion
+self.deliveryMethod="dd"
+self.workflowMethod=workflowMethod
+self.debug = debug
+self.unused_files = []
 
-    :param appName: Optional Information about process
-    :type appName: str
-
-    :return: the lar return code
-    :rtype: int
-    '''
-
-    self.dataset = dataset
-    self.limit = 1#limit
-    self.namespace = namespace
-
-    ''' namespace is an extra qualifier used in tests - deprecated '''
-    if namespace == None:
-        self.query = '''files from %s limit %i'''%(self.dataset, self.limit)
-    else:
-        query_args = (self.dataset, self.namespace, self.limit)
-        self.query = '''files from %s where namespace="%s" limit %i'''%query_args  # this is not a good idea
-    if self.debug: print ("DDInterface: the query is:",self.query)
-    self.worker_timeout = 3600*5
-    self.lar_limit = lar_limit
-    self.proj_id = -1
-    self.proj_exists = False
-    self.proj_state = None
-    self.loaded_files = [] # list of files with all the replicas for worker to choose from
-    self.input_replicas = []  # list of the replicas actually sent to Lar
-    self.loaded_file_uris = []
-    self.loaded = False
-    self.dd_timeout = timeout
-    self.wait_time = wait_time
-    self.max_wait_attempts = wait_limit
-    self.hit_timeout = False
-    self.lar_return = -1
-    self.lar_file_list = ''
-    self.n_waited = 0
-    self.next_failed = False
-    self.next_replicas = []
-    self.appFamily = appFamily
-    self.appName = appName
-    self.appVersion = appVersion
-    self.deliveryMethod="dd"
-    self.workflowMethod=workflowMethod
-    self.debug = debug
-    self.unused_files = []
-
-    self.retry_time = 600
+self.retry_time = 600
 
 
     #try:
@@ -182,7 +184,6 @@ class DDInterface:
     """
     Ask the project for a new file to process
     """
-
     self.next_output = self.dd_client.next_file(
         self.proj_id, timeout=self.dd_timeout,
         worker_id=os.environ['MYWORKERID'])
@@ -422,7 +423,6 @@ class DDInterface:
         .. return: lar return code
         .. rtype: int
         """
-
         dd_interface = DDInterface( lar_limit=args.load_limit,
                                  timeout=args.timeout,
                                  wait_time=args.wait_time,

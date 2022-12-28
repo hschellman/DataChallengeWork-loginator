@@ -24,6 +24,7 @@ Contents
 
 .. toctree::
 
-    usage
     api
-    
+    usage
+    tests
+    Modules

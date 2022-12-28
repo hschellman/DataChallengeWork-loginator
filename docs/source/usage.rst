@@ -6,21 +6,9 @@ Installation
 
 To use Loginator, first install from github and then run setup_hms.sh after modifying for your own user.
 
+Choose your delivery method
+---------------------------
 
+- :doc: `LArWrapper` and  :doc `DDInterface` set up data delivery projects using different interfaces and run over multiple files
 
-Samweb test
------------
-
-To run a test using samweb
-you can use the ``samtest`` module:
-
-the python API is:
-
-.. autofunction:: samtest.testProject
-
-Data Dispatcher tests
----------------------
-
-To run a test using the data dispatcher use ``run_lar.DDInterface``
-
-.. autoclass:: run_lar.DDInterface
+.. include: Modules.rst

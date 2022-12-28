@@ -5,4 +5,7 @@ API
     :toctree: generated
 
         samtest
-        run_lar
+
+        LArWrapper
+
+        DDInterface
