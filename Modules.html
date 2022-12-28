@@ -26,6 +26,9 @@
           <a href="genindex.html" title="General Index"
              accesskey="I">index</a></li>
         <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
           <a href="related.html" title="Related documentation"
              accesskey="N">next</a> |</li>
         <li class="right" >
@@ -45,12 +48,101 @@
 <h1>Python APIs<a class="headerlink" href="#python-apis" title="Permalink to this heading">¶</a></h1>
 <div class="section" id="samtest">
 <h2>samtest<a class="headerlink" href="#samtest" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="samtest.testProject">
+<span class="sig-prename descclassname"><span class="pre">samtest.</span></span><span class="sig-name descname"><span class="pre">testProject</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">defname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'schellma-run5141-PDSPProd4'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxFiles</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">appFamily</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'samtest'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">appName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">appVersion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fcl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'eventdump.fcl'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'samweb'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nskip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataTier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'out1:sam-user'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataStream</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'out1:test'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#samtest.testProject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a test sam project</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>defname</strong> (<em>str</em>) – Dataset definition</p></li>
+<li><p><strong>maxFiles</strong> (<em>int</em>) – Optional maximum number of files to deliver to processID</p></li>
+<li><p><strong>appFamily</strong> (<em>str</em>) – Optional Information about process</p></li>
+<li><p><strong>appVersion</strong> (<em>str</em>) – Optional Information about process</p></li>
+<li><p><strong>appName</strong> (<em>str</em>) – Optional Information about process</p></li>
+<li><p><strong>fcl</strong> (<em>str</em>) – name of fcl file to run</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – data access method - should be samweb</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – number of events to process</p></li>
+<li><p><strong>nskip</strong> (<em>int</em>) – number of events to skip before starting</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Return code from LAr</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 <div class="section" id="ddinterface">
 <h2>DDInterface<a class="headerlink" href="#ddinterface" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="DDInterface.DDInterface">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">DDInterface.</span></span><span class="sig-name descname"><span class="pre">DDInterface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">namespace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lar_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">120</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wait_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">appFamily</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">appName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">appVersion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workflowMethod</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'dd'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#DDInterface.DDInterface" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interface to the Data Dispatcher</p>
+<p>Main interface for the data Dispatcher</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>debug</strong> (<em>bool</em>) – add printout and send stdout to console instead of a files</p></li>
+<li><p><strong>dataset</strong> (<em>stream</em>) – data dispatcher dataset did</p></li>
+<li><p><strong>lar_limit</strong> (<em>int</em>) – maximum number of files to deliver</p></li>
+<li><p><strong>appFamily</strong> (<em>str</em>) – Optional Information about process</p></li>
+<li><p><strong>appVersion</strong> (<em>str</em>) – Optional Information about process</p></li>
+<li><p><strong>appName</strong> (<em>str</em>) – Optional Information about process</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the lar return code</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 <div class="section" id="larwrapper">
 <h2>LArWrapper<a class="headerlink" href="#larwrapper" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="LArWrapper.LArWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">LArWrapper.</span></span><span class="sig-name descname"><span class="pre">LArWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fcl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">o</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'temp*.root'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nskip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">appFamily</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">appName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">appVersion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projectID</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sam_web_uri</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processID</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataTier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sam-user'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataStream</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deliveryMethod</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workflowMethod</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">formatString</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'runLar_%s_%s_%%tc_%s_%s_%s.root'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processHASH</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replicas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#LArWrapper.LArWrapper" title="Permalink to this definition">¶</a></dt>
+<dd><p>LArWrapper - generic wrapper for LArSoft that works with samweb and dd</p>
+<p>Many of the options are the same as those for lar</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">$lar</span> -h <span class="c1">#for more examples</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>debug</strong> (<em>bool</em>) – add printout and send stdout to console instead of a files</p></li>
+<li><p><strong>fcl</strong> – LAr option - fcl file to use</p></li>
+<li><p><strong>flist</strong> – LAr/dd option - list of space delimited files to process from dd</p></li>
+<li><p><strong>appFamily</strong> (<em>str</em>) – LAr option - Optional Information about process</p></li>
+<li><p><strong>appVersion</strong> (<em>str</em>) – LAr option - Optional Information about process</p></li>
+<li><p><strong>appName</strong> (<em>str</em>) – LAr option - Optional Information about process</p></li>
+<li><p><strong>projectID</strong> (<em>int</em>) – LAr option - DD or samweb project ID</p></li>
+<li><p><strong>sam_web_uri</strong> (<em>str</em>) – LAr/samweb option - samweb project url</p></li>
+<li><p><strong>processID</strong> (<em>int</em>) – LAr/samweb option - samweb process ID</p></li>
+<li><p><strong>processHASH</strong> (<em>str</em>) – dd option - process ID from dd</p></li>
+<li><p><strong>dataTier</strong> (<em>str</em>) – LAr option - data tier for output</p></li>
+<li><p><strong>dataStream</strong> (<em>str</em>) – LAr option - data strem for output</p></li>
+<li><p><strong>deliveryMethod</strong> (<em>str</em>) – required parameter to tell samweb from dd/wfs</p></li>
+<li><p><strong>workflowMethod</strong> (<em>str</em>) – optional parameter - batch/interactive/wfs</p></li>
+<li><p><strong>formatString</strong> (<em>str</em>) – optional format the output log names</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the lar return code</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
 </div>
 </div>
 
@@ -65,9 +157,18 @@
     <h3><a href="index.html">Table of Contents</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Python APIs</a><ul>
-<li><a class="reference internal" href="#samtest">samtest</a></li>
-<li><a class="reference internal" href="#ddinterface">DDInterface</a></li>
-<li><a class="reference internal" href="#larwrapper">LArWrapper</a></li>
+<li><a class="reference internal" href="#samtest">samtest</a><ul>
+<li><a class="reference internal" href="#samtest.testProject"><code class="docutils literal notranslate"><span class="pre">testProject()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#ddinterface">DDInterface</a><ul>
+<li><a class="reference internal" href="#DDInterface.DDInterface"><code class="docutils literal notranslate"><span class="pre">DDInterface</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#larwrapper">LArWrapper</a><ul>
+<li><a class="reference internal" href="#LArWrapper.LArWrapper"><code class="docutils literal notranslate"><span class="pre">LArWrapper</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -110,6 +211,9 @@
         <li class="right" style="margin-right: 10px">
           <a href="genindex.html" title="General Index"
              >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
         <li class="right" >
           <a href="related.html" title="Related documentation"
              >next</a> |</li>
