@@ -39,7 +39,7 @@ def call_and_retry(func):
     nretries = 0
     while nretries < 5:
       try:
-        print(datetime.datetime.now())
+        print("call_and_retry",datetime.datetime.now())
         func(*args, **kwargs)
         break
       except (requests.exceptions.ConnectionError, APIError) as err:
@@ -48,7 +48,7 @@ def call_and_retry(func):
         time.sleep(args[0].retry_time)
         nretries += 1
     if nretries > 4:
-      print('Too many retries')
+      print("call_and_retry",'Too many retries')
       sys.exit(1)
   return inner1
 
@@ -57,7 +57,7 @@ def call_and_retry_return(func):
     nretries = 0
     while nretries < 5:
       try:
-        print(datetime.datetime.now())
+        print("call_and_retry_return",datetime.datetime.now())
         result = func(*args, **kwargs)
         break
       except (requests.exceptions.ConnectionError, APIError) as err:
@@ -66,7 +66,7 @@ def call_and_retry_return(func):
         time.sleep(args[0].retry_time)
         nretries += 1
     if nretries > 4:
-      print('Too many retries')
+      print("call_and_retry_return",'Too many retries')
       sys.exit(1)
     return result
   return inner1
@@ -113,6 +113,7 @@ class DDInterface:
     else:
         query_args = (self.dataset, self.namespace, self.limit)
         self.query = '''files from %s where namespace="%s" limit %i'''%query_args  # this is not a good idea
+    self.debug = debug
     if self.debug: print ("DDInterface: the query is:",self.query)
     self.worker_timeout = 3600*5
     self.lar_limit = lar_limit
@@ -137,7 +138,6 @@ class DDInterface:
     self.appVersion = appVersion
     self.deliveryMethod="dd"
     self.workflowMethod=workflowMethod
-    self.debug = debug
     self.unused_files = []
 
     self.retry_time = 600
@@ -161,7 +161,7 @@ class DDInterface:
     """
 
     self.dd_client.login_x509(username, os.environ['X509_USER_PROXY'])
-    #print(datetime.datetime.now())
+    print("Login:", datetime.datetime.now())
 
 
   def SetLarLimit(self, limit):
@@ -174,7 +174,7 @@ class DDInterface:
     query_files = mc_client.query(self.query)
     proj_dict = self.dd_client.create_project(
         query_files, query=self.query, worker_timeout=self.worker_timeout)
-    print(datetime.datetime.now())
+    print("CreateProject",datetime.datetime.now())
     self.proj_state = proj_dict['state']
     self.proj_id = proj_dict['project_id']
     self.proj_exists = True
@@ -194,7 +194,7 @@ class DDInterface:
     self.next_output = self.dd_client.next_file(
         self.proj_id, timeout=self.dd_timeout,
         worker_id=os.environ['MYWORKERID'])
-    #print(datetime.datetime.now())
+    print("next_file ",datetime.datetime.now())
 
   @call_and_retry
   def file_done(self, did):
@@ -205,7 +205,7 @@ class DDInterface:
       """
 
       self.dd_client.file_done(self.proj_id, did)
-    #print(datetime.datetime.now())
+      print("file_done ", datetime.datetime.now())
 
   @call_and_retry
   def file_failed(self, did, do_retry=True):
@@ -213,13 +213,13 @@ class DDInterface:
         self.proj_id, did,
         #'%s:%s'%(self.next_output['namespace'], self.next_output['name']),
         retry=do_retry)
-    #print(datetime.datetime.now())
+    print("file_failed ", datetime.datetime.now())
 
   @call_and_retry_return
   def get_project(self, proj_id):
     proj = self.dd_client.get_project(proj_id, with_files=False)
     print (proj)
-    #print(datetime.datetime.now())
+    print("get_project", datetime.datetime.now())
     return proj
 
 
@@ -307,7 +307,7 @@ class DDInterface:
 
   def Next(self):
     if self.proj_id < 0:
-      raise ValueError('DDLArInterface::Next -- Project ID is %i. Has a project been created?'%self.proj_id)
+      raise ValueError('DDInterface::Next -- Project ID is %i. Has a project been created?'%self.proj_id)
     ## exists, state, etc. -- TODO
     self.next_file()
     if self.next_output == None:
@@ -393,6 +393,7 @@ class DDInterface:
         print(datetime.datetime.now())
 
   def RunLAr(self, fcl=None, n=-1, nskip=0):
+    print ("RunLAr",datetime.datetime.now())
     if len(self.loaded_files) == 0:
       print('No files loaded with data dispatcher. Exiting gracefully')
       return
@@ -459,7 +460,7 @@ if __name__ == '__main__':
     parser = ap()
     # dd args
     parser.add_argument('--dataset', default='schellma:run5141recentReco',type=str)
-    parser.add_argument('--load_limit', default=4, type=int,help='number of files to give to lar')
+    parser.add_argument('--load_limit', default=1, type=int,help='number of files to give to lar')
     parser.add_argument('--namespace', default=None, type=str, help="optional namespace qualifier for dataset")
     parser.add_argument('--query_limit', default=100)
     parser.add_argument('--query_skip', default=10)

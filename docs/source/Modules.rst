@@ -1,8 +1,8 @@
 Python APIs
 -----------
 
-samweb
-******
+samtest
+*******
 
 .. autofunction:: samtest::testProject
 
