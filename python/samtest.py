@@ -6,15 +6,17 @@ from argparse import ArgumentParser as ap
 samweb = samweb_client.SAMWebClient(experiment='dune')
 
 TEST = True
+
 def testProject(defname="schellma-run5141-PDSPProd4", maxFiles=5, appFamily="samtest", appName="test", appVersion=None,\
  fcl="eventdump.fcl",method="samweb",n=-1,nskip=0,dataTier="out1:sam-user",dataStream="out1:test"):
     """
+
     Run a test sam project
 
     :param defname: Dataset definition
     :type defname: str
 
-    :param maxFiles: Optional Maximum number of files to deliver to processID
+    :param maxFiles: Optional maximum number of files to deliver to processID
     :type maxFiles: int
 
     :param appFamily: Optional Information about process
@@ -42,6 +44,7 @@ def testProject(defname="schellma-run5141-PDSPProd4", maxFiles=5, appFamily="sam
     :rtype: int
 
     """
+
     if appVersion == None:
         appVersion = os.environ["DUNESW_VERSION"]
     projectname = samweb.makeProjectName(defname)
@@ -77,6 +80,10 @@ def testProject(defname="schellma-run5141-PDSPProd4", maxFiles=5, appFamily="sam
     return retcode
 
 if __name__ == '__main__':
+
+    '''
+    .. option:: --defName
+    '''
     parser = ap()
     parser.add_argument('--defName', default="schellma-run5141-PDSPProd4", type=str, help='samweb dataset definition name')
     parser.add_argument('--appFamily',default='test', type=str, help='samweb needs this')
