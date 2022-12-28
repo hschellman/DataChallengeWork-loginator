@@ -49,11 +49,13 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
+    "sphinx.ext.autosectionlabel",
     #'sphinxcontrib.programoutput',  # not available to github
 ]
 
 autoclass_content = "both"  # from ivmfnal
 
+autosectionlabel_prefix_document = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

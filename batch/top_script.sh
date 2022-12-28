@@ -161,9 +161,9 @@ export FHICL_FILE_PATH=${CONDOR_DIR_INPUT}/loginator/fcl:${FHICL_FILE_PATH}
 
 #cp ${CONDOR_DIR_INPUT}/fcl/$FCL .
 
-echo "I will now run run_lar with fcl file " $FCL
+echo "I will now run DDInterface with fcl file " $FCL
 
-python -m run_lar \
+python -m DDInterface \
   --namespace $NAMESPACE \
   -c $FCL \
   --projectID $PROJECTID \
