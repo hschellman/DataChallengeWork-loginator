@@ -15,3 +15,8 @@ LArWrapper
 **********
 
 .. autoclass:: LArWrapper::LArWrapper
+
+Loginator
+*********
+
+.. autoclass:: Loginator::Loginator
