@@ -21,8 +21,9 @@ import pathlib
 top = pathlib.Path(__file__).parents[2].resolve().as_posix()
 print("top",top)
 py = os.path.join(top,"python")
-sys.path.insert(0, pathlib.Path(__file__).parents[2].resolve().as_posix())
+sys.path.insert(0,top)
 sys.path.insert(0,py)
+sys.path.insert(0,os.path.join(top,"tests"))
 
 
 
@@ -49,7 +50,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.napoleon',
-    "sphinx.ext.autosectionlabel",
+    'sphinx.ext.autosectionlabel',
+    'sphinx.ext.viewcode',
     #'sphinxcontrib.programoutput',  # not available to github
 ]
 

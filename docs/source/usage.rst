@@ -4,7 +4,16 @@ Usage
 Installation
 ------------
 
-To use Loginator, first install from github and then run setup_hms.sh after modifying for your own user.
+To use Loginator, first install this package, and `metacat <https://metacat.readthedocs.io/en/latest/>`_ and `data dispatcher <https://data-dispatcher.readthedocs.io/en/latest/>`_ from github (or ups).
+
+
+Then run `setup_hms` after modifying for your own user.
+
+.. literalinclude:: ../../setup_hms.sh
+   :linenos:
+   :language: bash
+
+
 
 Choose your delivery method
 ---------------------------

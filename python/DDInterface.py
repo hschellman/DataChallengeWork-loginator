@@ -140,7 +140,7 @@ class DDInterface:
     self.workflowMethod=workflowMethod
     self.unused_files = []
 
-    self.retry_time = 600
+    self.retry_time = wait_time
 
 
     #try:
@@ -154,12 +154,13 @@ class DDInterface:
 
   @call_and_retry
   def Login(self, username):
+
     """
     Get credentials for DD and metacat
     :param username: username (normally fnal service account)
     :type username: str
     """
-
+    print("Try to login:", datetime.datetime.now())
     self.dd_client.login_x509(username, os.environ['X509_USER_PROXY'])
     print("Login:", datetime.datetime.now())
 
@@ -198,17 +199,19 @@ class DDInterface:
 
   @call_and_retry
   def file_done(self, did):
+
       """
       Mark file as done
       :param did: did <namespace>:<filename> of finished file
       :type did: str
       """
-
+      print ("try to mark file done", datetime.datetime.now())
       self.dd_client.file_done(self.proj_id, did)
       print("file_done ", datetime.datetime.now())
 
   @call_and_retry
   def file_failed(self, did, do_retry=True):
+    print ("try to mark file failed", datetime.datetime.now())
     self.dd_client.file_failed(
         self.proj_id, did,
         #'%s:%s'%(self.next_output['namespace'], self.next_output['name']),
@@ -217,6 +220,7 @@ class DDInterface:
 
   @call_and_retry_return
   def get_project(self, proj_id):
+    print ("try to get project", datetime.datetime.now())
     proj = self.dd_client.get_project(proj_id, with_files=False)
     print (proj)
     print("get_project", datetime.datetime.now())
@@ -246,7 +250,7 @@ class DDInterface:
     ##Should we take out the proj_state clause?
     while (count < self.lar_limit and not self.next_failed): #and
            #self.proj_state == 'active'):
-      print('Attempting fetch %i/%i'%(count, self.lar_limit), self.next_failed)
+      print('Loadfiles: Attempting fetch %i/%i'%(count, self.lar_limit), self.next_failed)
       self.Next()
       if self.next_output == None:
         ## this shouldn't happen, but if it does just exit the loop

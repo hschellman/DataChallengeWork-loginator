@@ -5,7 +5,7 @@ export DATA_DISPATCHER_URL=https://metacat.fnal.gov:9443/dune/dd/data
 export DATA_DISPATCHER_AUTH_URL=https://metacat.fnal.gov:8143/auth/dune
 export METACAT_AUTH_SERVER_URL=https://metacat.fnal.gov:8143/auth/dune
 export METACAT_SERVER_URL=https://metacat.fnal.gov:9443/dune_meta_demo/app
-
+export BEGIN_TIME=`date  +"%d-%b-%Y %H:%M:%S %Z"`
 
 POSITIONAL_ARGS=()
 nskip=0
@@ -156,12 +156,16 @@ ls -lrtR $CONDOR_DIR_INPUT
 export IFDH_DEBUG=0
 
 export FHICL_FILE_PATH=${CONDOR_DIR_INPUT}/loginator/fcl:${FHICL_FILE_PATH}
+export FHICL_FILE_PATH=${CONDOR_DIR_INPUT}/loginator:${FHICL_FILE_PATH}
+
+echo "fcl path:", $FHICL_FILE_PATH
 
 #echo "try to really mean it about the FCL since putting it in the path doesn't seem to do it for me"
 
 #cp ${CONDOR_DIR_INPUT}/fcl/$FCL .
 
 echo "I will now run DDInterface with fcl file " $FCL
+
 
 python -m DDInterface \
   --namespace $NAMESPACE \

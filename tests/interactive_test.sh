@@ -1,3 +1,4 @@
 # run an interactive test HMS 12-2-2022
-python run_interactive.py --dataset dc4:dc4 --namespace dc4-hd-protodune --query_limit 100 --load_limit 3 --fcl eventdump.fcl --user schellma --appFamily=protoduneana --appVersion=$PROTODUNEANA_VERSION  -n 5
-
+export BEGIN_TIME=`date +"%d-%b-%Y %H:%M:%S %Z"`
+python -m DDInterface --dataset schellma:run5141recentReco --query_limit 10 --load_limit 1 -c fcl/test.fcl --user $USER --appFamily=protoduneana --appName=test --appVersion=$PROTODUNEANA_VERSION  -n 20
+# this does a minimal test reading n=20 events from load_limit=1 files

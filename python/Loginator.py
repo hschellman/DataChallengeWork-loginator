@@ -35,10 +35,12 @@ class Loginator:
     """
 ## initialization, requires an Art logfile to parse and creates a template json file
 
-    def __init__(self,logname):
+    def __init__(self,logname,debug=False):
         """
         :param logname: name of the art logfile to read
         :type logname: str
+        :param debug: turn on debug printout
+        :type debug: bool
         """
 
         if not os.path.exists(logname):
@@ -48,7 +50,7 @@ class Loginator:
         self.logfile = open(logname,'r')
         self.outobject ={}
         self.info = self.getsysinfo()
-        self.tags = ["Opened input file", "Closed input file","MemReport  VmPeak","CPU","Events total","Initiating request to open input file"]
+        self.tags = ["%MSG-i MF_INIT_OK:  Early ","Opened input file", "Closed input file","MemReport  VmPeak","CPU","Events total","Initiating request to open input file"]
         self.template = {
              # job attributes
             "user":None,  # (who's request is this)
@@ -56,10 +58,16 @@ class Loginator:
             "job_node":None,  # (name within the site)
             "job_site":None,  # (name of the site)
             "country":None,  # (nationality of the site)
-            "job_real_memory":None,
-            "job_wall_time":None,
-            "job_cpu_time":None,
-            "job_total_events":None,
+            "art_real_memory":None,
+            "timestamp_for_job_start":"",
+            "timestamp_for_art_start":"",
+            "startup_time":0.0,
+            "art_wall_time":None,
+            "art_cpu_time":None,
+            "art_total_events":None,
+            "art_cpu_time_per_event":-1.,
+            "art_wall_time_per_event":-1.,
+            "art_cpu_efficiency":-1.,
             "project_id":0,
             "delivery_method":None, #(samweb/dd/wfs)
             "workflow_method":None,
@@ -88,6 +96,7 @@ class Loginator:
             "namespace":None,
             "event_count":None
         }
+        self.debug=debug
 
 
     def setDebug(self,debug=False):
@@ -158,24 +167,29 @@ class Loginator:
             if tag == None:
                 continue
 
+            # find the job start
+            if "Early" in tag:
+                part = line.split(tag)[1]
+                part = part.split(" JobSetup")[0]
+                larstart = part
             # memory from end of job
             if "MemReport  VmPeak" == tag:
-                memdata = line.split("VmHWM = ")[1].strip()
+                memdata = float(line.split("VmHWM = ")[1].strip())
 
             # cpu/walltime from end of job
             if "CPU" == tag:
                 timeline = line.strip().split(" ")
                 if len(timeline) < 7:
                     continue
-                cpudata = timeline[3]
-                walldata = timeline[6]
+                cpudata = float(timeline[3])
+                walldata = float(timeline[6])
 
             # total events processedf from end of job
             if "Events total" in tag:
                 eventline  = line.strip().split(" ")
                 if len(eventline) < 11:
                     continue
-                totalevents = eventline[4]
+                totalevents = int(eventline[4])
 
             # file request/open/close activities
             if "file" in tag:
@@ -194,6 +208,12 @@ class Loginator:
                     localobject["final_state"] = "Requested"
                     localobject["path"]=filepath
                     localobject["file_name"] = filename
+                    if "BEGIN_TIME" in os.environ:
+                        localobject["timestamp_for_job_start"]=os.getenv("BEGIN_TIME")
+                    else:
+                        localobject["timestamp_for_job_start"] = larstart
+                    localobject["timestamp_for_art_start"]=larstart
+                    localobject["startup_time"]=self.duration(localobject["timestamp_for_job_start"],larstart)
                     if "root" in filepath[0:10]:
                         if self.debug: print ("I am root")
                         tmp = filepath.split("//")
@@ -226,16 +246,23 @@ class Loginator:
                     localobject["timestamp_for_end"] = timestamp
                     localobject["duration"]=self.duration(localobject["timestamp_for_request"],timestamp)
                     localobject["final_state"] = "Closed"
+
                 object[filename] = localobject
                 continue
 
 
         # add the job info to all file records if available
         for thing in object:
-            if memdata != None: object[thing]["job_real_memory"]=memdata
-            if walldata != None: object[thing]["job_wall_time"]=walldata
-            if cpudata != None: object[thing]["job_cpu_time"]=cpudata
-            if totalevents != None: object[thing]["job_total_events"]=totalevents
+            if memdata != None: object[thing]["art_real_memory"]=memdata
+            if walldata != None: object[thing]["art_wall_time"]=walldata
+            if cpudata != None: object[thing]["art_cpu_time"]=cpudata
+            if totalevents != None: object[thing]["art_total_events"]=totalevents
+            if totalevents > 0:
+                object[thing]["art_cpu_time_per_event"] = cpudata/totalevents
+                object[thing]["art_wall_time_per_event"] = walldata/totalevents
+            if walldata > 0:
+                object[thing]["art_cpu_efficiency"] = cpudata/walldata
+
             #print ("mem",object[thing]["real_memory"])
         self.outobject=object
 
@@ -343,37 +370,6 @@ class Loginator:
 
         return notfound
 
-    # def findmissingfiles(self,files):
-    #     """ add information from data dispatcher on files reserved for this process to the record.
-    #      can use this information to mark unused files"""
-    #
-    #     notfound = []
-    #
-    #     for r in files:
-    #         found = False
-    #         if ":" in r:
-    #             s = r.split(":")
-    #             name = s[1]
-    #             namespace = s[0]
-    #         else:
-    #             name = r
-    #             namespace = "samweb"
-    #
-    #         for f in self.outobject:
-    #             if f == name:
-    #                 if self.debug: print ("file match",r)
-    #                 found = True
-    #                 self.outobject[f]["namespace"] = namespace
-    #         if not found:
-    #             print (r,"appears in replicas but not in Lar Log, need to mark as unused")
-    #             notfound.append(r)
-    #
-    #     return notfound
-    #
-
-
-
-
     def writeme(self):
         """ dump info to json file """
         result = []
@@ -409,8 +405,8 @@ class Loginator:
 def test():
     """ test the Loginator """
 
-    parse = Loginator(sys.argv[1])
-    parse.setDebug(True)
+    parse = Loginator(logname=sys.argv[1],debug=True)
+
     #print ("looking at",sys.argv[1])
     parse.readme()
     parse.addsysinfo()
@@ -418,7 +414,7 @@ def test():
     if "SAM_EXPERIMENT" in os.environ:
         parse.addsaminfo()
     else:
-        parse.addmetacatinfo("pdsp_det_reco")
+        parse.addmetacatinfo(namespace="pdsp_det_reco")
             #parse.addmetacatinfo("dc4-hd-protodune") # argument is there for testing when you don't have replica list.
     parse.writeme()
 
