@@ -24,8 +24,9 @@ Contents
 
 .. toctree::
 
-    api
+    Intro
     usage
     tests
     Modules
+    api
     related

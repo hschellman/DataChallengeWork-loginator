@@ -1,0 +1,35 @@
+﻿Loginator
+=========
+
+.. automodule:: Loginator
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+   
+      test
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Loginator
+   
+   
+
+   
+   
+   
+
+
+

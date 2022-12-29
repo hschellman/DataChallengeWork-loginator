@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Related documentation &#8212; Loginator 0.1 documentation</title>
+    <title>What this package does &#8212; Loginator 0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -16,7 +16,8 @@
     <script src="_static/sphinx_highlight.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Loginator" href="generated/Loginator.html" /> 
+    <link rel="next" title="Usage" href="usage.html" />
+    <link rel="prev" title="Loginator Documentation" href="index.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
       <h3>Navigation</h3>
@@ -28,10 +29,13 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="generated/Loginator.html" title="Loginator"
+          <a href="usage.html" title="Usage"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Loginator Documentation"
              accesskey="P">previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">Loginator 0.1 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Related documentation</a></li> 
+        <li class="nav-item nav-item-this"><a href="">What this package does</a></li> 
       </ul>
     </div>  
 
@@ -40,29 +44,29 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="related-documentation">
-<h1>Related documentation<a class="headerlink" href="#related-documentation" title="Permalink to this heading">¶</a></h1>
-<div class="section" id="metacat">
-<h2>metacat<a class="headerlink" href="#metacat" title="Permalink to this heading">¶</a></h2>
+  <div class="section" id="what-this-package-does">
+<h1>What this package does<a class="headerlink" href="#what-this-package-does" title="Permalink to this heading">¶</a></h1>
 <blockquote>
-<div><p><a class="reference external" href="https://metacat.readthedocs.io/en/latest/">https://metacat.readthedocs.io/en/latest/</a></p>
+<div><ul class="simple">
+<li><p>Example scripts ( <a class="reference internal" href="tests.html"><span class="doc">Tests</span></a> ) for running LArSoft using either</p></li>
+</ul>
+<p><a class="reference external" href="https://cdcvs.fnal.gov/redmine/projects/sam-web-client/wiki">samweb</a> or
+the new <a class="reference external" href="https://data-dispatcher.readthedocs.io/en/latest/">Data Dispatcher (dd)</a> data delivery systems.</p>
+<ul class="simple">
+<li><p>A log parser <a class="reference internal" href="generated/Loginator.html"><span class="doc">Loginator</span></a> that gathers information about the processing of an input file for monitoring purposes.</p></li>
+</ul>
 </div></blockquote>
-</div>
-<div class="section" id="data-dispatcher-dd">
-<h2>Data Dispatcher (dd)<a class="headerlink" href="#data-dispatcher-dd" title="Permalink to this heading">¶</a></h2>
-<blockquote>
-<div><p><a class="reference external" href="https://data-dispatcher.readthedocs.io/en/latest/">https://data-dispatcher.readthedocs.io/en/latest/</a></p>
-</div></blockquote>
-</div>
-<div class="section" id="larsoft">
-<h2>LArSoft<a class="headerlink" href="#larsoft" title="Permalink to this heading">¶</a></h2>
-<blockquote>
-<div><p><a class="reference external" href="https://larsoft.org/training/">https://larsoft.org/training/</a></p>
-</div></blockquote>
-</div>
-<div class="section" id="notes">
-<h2><a class="reference internal" href="Notes.html"><span class="doc">Notes on sphinx</span></a><a class="headerlink" href="#notes" title="Permalink to this heading">¶</a></h2>
-</div>
+<p>Instead of running <a href="#id1"><span class="problematic" id="id2">`lar &lt;https://larsoft.org/important-concepts-in-larsoft/`_</span></a> directly,
+you run <span class="xref std std-doc">LArWrapper</span> with similar arguments.  It produces a summary dictionary that include information about CPU and memory use.
+This is useful both for profiling jobs before large processing campaigns and for monitoring overall resource use.</p>
+<p>The package has subdirectoris:</p>
+<p>——-  ———————————–
+python   the code itself
+batch    scripts needed for batch submission
+tests    sample scripts to exercise the code
+fcl      example fcl files
+——- ———————————–</p>
+<p>and some utility scripts to setup.</p>
 </div>
 
 
@@ -73,27 +77,19 @@
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
   <div>
-    <h3><a href="index.html">Table of Contents</a></h3>
-    <ul>
-<li><a class="reference internal" href="#">Related documentation</a><ul>
-<li><a class="reference internal" href="#metacat">metacat</a></li>
-<li><a class="reference internal" href="#data-dispatcher-dd">Data Dispatcher (dd)</a></li>
-<li><a class="reference internal" href="#larsoft">LArSoft</a></li>
-<li><a class="reference internal" href="#notes"><span class="xref std std-doc">Notes</span></a></li>
-</ul>
-</li>
-</ul>
-
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">Loginator Documentation</a></p>
   </div>
   <div>
-    <h4>Previous topic</h4>
-    <p class="topless"><a href="generated/Loginator.html"
-                          title="previous chapter">Loginator</a></p>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="usage.html"
+                          title="next chapter">Usage</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="_sources/related.rst.txt"
+      <li><a href="_sources/Intro.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div>
@@ -121,10 +117,13 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="generated/Loginator.html" title="Loginator"
+          <a href="usage.html" title="Usage"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Loginator Documentation"
              >previous</a> |</li>
         <li class="nav-item nav-item-0"><a href="index.html">Loginator 0.1 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Related documentation</a></li> 
+        <li class="nav-item nav-item-this"><a href="">What this package does</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
