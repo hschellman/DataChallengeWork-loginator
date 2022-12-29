@@ -59,8 +59,9 @@
 <span class="linenos"> 7</span><span class="nb">export</span> <span class="nv">HERE</span><span class="o">=</span><span class="nv">$PWD</span>
 <span class="linenos"> 8</span><span class="nb">export</span> <span class="nv">PYTHONPATH</span><span class="o">=</span><span class="nv">$HERE</span>/python:<span class="si">${</span><span class="nv">PYTHONPATH</span><span class="si">}</span>
 <span class="linenos"> 9</span>kx509
-<span class="linenos">10</span><span class="nb">source</span> ~/proxy.sh
-<span class="linenos">11</span><span class="nb">export</span> <span class="nv">X509_USER_PROXY</span><span class="o">=</span>/tmp/x509up_u1327  <span class="c1"># this is specific to me</span>
+<span class="linenos">10</span>voms-proxy-init -rfc -noregen -voms<span class="o">=</span>dune:/dune/Role<span class="o">=</span>Analysis -valid <span class="m">120</span>:00
+<span class="linenos">11</span>voms-proxy-info
+<span class="linenos">12</span><span class="nb">export</span> <span class="nv">X509_USER_PROXY</span><span class="o">=</span>/tmp/x509up_u1327  <span class="c1"># this is specific to me</span>
 </pre></div>
 </div>
 </div>

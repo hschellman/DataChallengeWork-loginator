@@ -17,7 +17,8 @@ python   the code itself
 batch    scripts needed for batch submission
 tests    sample scripts to exercise the code
 fcl      example fcl files
+docs     documentation
 ======   ===================================
 
 
-and some utility scripts to setup.
+and some utility scripts to setup, tar up your code and make maintenance easier
