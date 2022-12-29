@@ -68,6 +68,20 @@
 <div class="section" id="choose-your-delivery-method">
 <h2>Choose your delivery method<a class="headerlink" href="#choose-your-delivery-method" title="Permalink to this heading">¶</a></h2>
 <p><a class="reference internal" href="generated/LArWrapper.html"><span class="doc">LArWrapper</span></a> and  <a class="reference internal" href="generated/DDInterface.html"><span class="doc">DDInterface</span></a> set up data delivery projects using different interfaces and run over multiple files</p>
+<p>Running over large datasets requires a data access system capable of delivering data from a set of files to multiple processes. This is implemented via</p>
+<ul class="simple">
+<li><p>a master <em>project</em> which creates and owns a list of files and keeps track</p></li>
+<li><p>a data catalog (samweb or metacat) that knows about data characteristics</p></li>
+<li><p>a data location catalog (samweb or rucio) that knows where a given file can be found</p></li>
+<li><p>a data delivery method, either a direct copy or xroot streaming from the location</p></li>
+<li><p>the process running on a worker node - it has an ID and is assigned files to process</p></li>
+</ul>
+<p>The data dispatcher, wfs system and samweb all support the concept of projects and worker processe and act reasonably similarly.</p>
+<p>This package currently supports batch and interactive runs of LArsoft using the new data dispatcher and interactive tests with the older samweb interface.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>wfs will be added soon.</p>
+</div>
 </div>
 <div class="section" id="look-at-the-tests">
 <h2>Look at the tests<a class="headerlink" href="#look-at-the-tests" title="Permalink to this heading">¶</a></h2>
