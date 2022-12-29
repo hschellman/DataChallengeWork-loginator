@@ -7,5 +7,6 @@ export PATH=$HOME/.local/bin/:$PATH
 export HERE=$PWD
 export PYTHONPATH=$HERE/python:${PYTHONPATH}
 kx509
-source ~/proxy.sh
+voms-proxy-init -rfc -noregen -voms=dune:/dune/Role=Analysis -valid 120:00
+voms-proxy-info
 export X509_USER_PROXY=/tmp/x509up_u1327  # this is specific to me
