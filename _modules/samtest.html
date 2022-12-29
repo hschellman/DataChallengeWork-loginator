@@ -1,0 +1,193 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>samtest &#8212; Loginator 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Loginator 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">samtest</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for samtest</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span><span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">samweb_client</span>
+<span class="kn">import</span> <span class="nn">LArWrapper</span>
+<span class="kn">import</span>  <span class="nn">argparse</span>
+
+<span class="n">samweb</span> <span class="o">=</span> <span class="n">samweb_client</span><span class="o">.</span><span class="n">SAMWebClient</span><span class="p">(</span><span class="n">experiment</span><span class="o">=</span><span class="s1">&#39;dune&#39;</span><span class="p">)</span>
+
+<span class="n">TEST</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="testProject"><a class="viewcode-back" href="../Modules.html#samtest.testProject">[docs]</a><span class="k">def</span> <span class="nf">testProject</span><span class="p">(</span><span class="n">defname</span><span class="o">=</span><span class="s2">&quot;schellma-run5141-PDSPProd4&quot;</span><span class="p">,</span> <span class="n">maxFiles</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">appFamily</span><span class="o">=</span><span class="s2">&quot;samtest&quot;</span><span class="p">,</span> <span class="n">appName</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> <span class="n">appVersion</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>\
+ <span class="n">fcl</span><span class="o">=</span><span class="s2">&quot;eventdump.fcl&quot;</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;samweb&quot;</span><span class="p">,</span><span class="n">n</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span><span class="n">nskip</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">dataTier</span><span class="o">=</span><span class="s2">&quot;out1:sam-user&quot;</span><span class="p">,</span><span class="n">dataStream</span><span class="o">=</span><span class="s2">&quot;out1:test&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Run a test sam project</span>
+
+<span class="sd">    :param defname: Dataset definition</span>
+<span class="sd">    :type defname: str</span>
+
+<span class="sd">    :param maxFiles: Optional maximum number of files to deliver to processID</span>
+<span class="sd">    :type maxFiles: int</span>
+
+<span class="sd">    :param appFamily: Optional Information about process</span>
+<span class="sd">    :type appFamily: str</span>
+
+<span class="sd">    :param appVersion: Optional Information about process</span>
+<span class="sd">    :type appVersion: str</span>
+
+<span class="sd">    :param appName: Optional Information about process</span>
+<span class="sd">    :type appName: str</span>
+
+<span class="sd">    :param fcl: name of fcl file to run</span>
+<span class="sd">    :type fcl: str</span>
+
+<span class="sd">    :param method: data access method - should be samweb</span>
+<span class="sd">    :type method: str</span>
+
+<span class="sd">    :param n: number of events to process</span>
+<span class="sd">    :type n: int</span>
+
+<span class="sd">    :param nskip: number of events to skip before starting</span>
+<span class="sd">    :type nskip: int</span>
+
+<span class="sd">    :return: Return code from LAr</span>
+<span class="sd">    :rtype: int</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">appVersion</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">appVersion</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;DUNESW_VERSION&quot;</span><span class="p">]</span>
+    <span class="n">projectname</span> <span class="o">=</span> <span class="n">samweb</span><span class="o">.</span><span class="n">makeProjectName</span><span class="p">(</span><span class="n">defname</span><span class="p">)</span>
+    <span class="n">projectinfo</span> <span class="o">=</span> <span class="n">samweb</span><span class="o">.</span><span class="n">startProject</span><span class="p">(</span><span class="n">projectname</span><span class="p">,</span> <span class="n">defname</span><span class="p">)</span>
+    <span class="c1">#print (projectinfo)</span>
+    <span class="n">projecturl</span> <span class="o">=</span> <span class="n">projectinfo</span><span class="p">[</span><span class="s2">&quot;projectURL&quot;</span><span class="p">]</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Project name is </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">projectinfo</span><span class="p">[</span><span class="s2">&quot;project&quot;</span><span class="p">])</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Project URL is </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">projecturl</span><span class="p">)</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="n">samweb</span><span class="o">.</span><span class="n">projectSummary</span><span class="p">(</span><span class="n">projecturl</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="n">info</span><span class="p">)</span>
+    <span class="n">projectID</span> <span class="o">=</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;project_id&quot;</span><span class="p">]</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Project ID is </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">projectID</span><span class="p">)</span>
+    <span class="n">deliveryLocation</span> <span class="o">=</span> <span class="kc">None</span> <span class="c1"># set this to a specific hostname if you want - default is the local hostname</span>
+
+    <span class="n">cpid</span> <span class="o">=</span> <span class="n">samweb</span><span class="o">.</span><span class="n">startProcess</span><span class="p">(</span><span class="n">projecturl</span><span class="p">,</span> <span class="n">appFamily</span><span class="p">,</span> <span class="n">appName</span><span class="p">,</span> <span class="n">appVersion</span><span class="p">,</span> <span class="n">deliveryLocation</span><span class="p">,</span> <span class="n">maxFiles</span><span class="o">=</span><span class="n">maxFiles</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Consumer process id </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">cpid</span><span class="p">)</span>
+    <span class="n">processurl</span> <span class="o">=</span> <span class="n">samweb</span><span class="o">.</span><span class="n">makeProcessUrl</span><span class="p">(</span><span class="n">projecturl</span><span class="p">,</span> <span class="n">cpid</span><span class="p">)</span>
+
+    <span class="n">larW</span> <span class="o">=</span> <span class="n">LArWrapper</span><span class="o">.</span><span class="n">LArWrapper</span><span class="p">(</span><span class="n">fcl</span><span class="o">=</span><span class="n">fcl</span><span class="p">,</span><span class="n">appFamily</span><span class="o">=</span><span class="n">appFamily</span><span class="p">,</span><span class="n">appName</span><span class="o">=</span><span class="n">appName</span><span class="p">,</span>\
+    <span class="n">appVersion</span><span class="o">=</span><span class="n">appVersion</span><span class="p">,</span><span class="n">deliveryMethod</span><span class="o">=</span><span class="s2">&quot;samweb&quot;</span><span class="p">,</span><span class="n">workflowMethod</span><span class="o">=</span><span class="s2">&quot;interactive&quot;</span><span class="p">,</span>\
+    <span class="n">sam_web_uri</span><span class="o">=</span><span class="n">projecturl</span><span class="p">,</span><span class="n">processID</span><span class="o">=</span><span class="n">cpid</span><span class="p">,</span><span class="n">projectID</span><span class="o">=</span><span class="n">projectID</span><span class="p">,</span>\
+    <span class="n">dataTier</span><span class="o">=</span><span class="n">dataTier</span><span class="p">,</span><span class="n">dataStream</span><span class="o">=</span><span class="n">dataStream</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span><span class="n">nskip</span><span class="o">=</span><span class="n">nskip</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;before DoLAr&quot;</span><span class="p">)</span>
+    <span class="n">retcode</span> <span class="o">=</span> <span class="n">larW</span><span class="o">.</span><span class="n">DoLAr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+    <span class="nb">list</span> <span class="o">=</span> <span class="n">larW</span><span class="o">.</span><span class="n">LArResults</span><span class="p">()</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;lar return code&quot;</span><span class="p">,</span><span class="n">retcode</span><span class="p">)</span>
+
+
+    <span class="n">samweb</span><span class="o">.</span><span class="n">stopProject</span><span class="p">(</span><span class="n">projecturl</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="n">samweb</span><span class="o">.</span><span class="n">projectSummaryText</span><span class="p">(</span><span class="n">projecturl</span><span class="p">))</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Project ended&quot;</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;LArWrapper returned&quot;</span><span class="p">,</span><span class="n">retcode</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">retcode</span></div>
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--defName&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;schellma-run5141-PDSPProd4&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;samweb dataset definition name&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--appFamily&#39;</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;samweb needs this&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--appName&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;test&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;samweb needs this&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--appVersion&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;DUNESW_VERSION&#39;</span><span class="p">),</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;samweb needs this&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--dataTier&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;out1:sam-user&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;data tier for output file&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--dataStream&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;out1:test&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;data stream for output file&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;temp.root&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;output event stream file&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;name of fcl file&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--user&#39;</span><span class="p">,</span> <span class="n">default</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;USER&quot;</span><span class="p">),</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;user name&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-n&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;number of events total to process&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-nskip&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;number of events to skip before starting&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--maxFiles&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;number of files to deliver per job&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-M&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="s1">&#39;fake argument&#39;</span><span class="p">)</span>
+    <span class="c1"># if restarting need these</span>
+ <span class="c1">#   parser.add_argument(&#39;--projectID&#39;, type=int, default=0, help=&#39;integer that identifies the project, samweb/dd/wfs&#39;)</span>
+  <span class="c1">#  parser.add_argument(&#39;--sam_web_uri&#39;,type=str, help=&#39;samweb url for the project&#39;)</span>
+
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">c</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;You must provide a fcl file with -c &quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">testProject</span><span class="p">(</span><span class="n">defname</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">defName</span><span class="p">,</span> <span class="n">appFamily</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">appFamily</span><span class="p">,</span> <span class="n">appName</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">appName</span><span class="p">,</span> <span class="n">appVersion</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">appVersion</span><span class="p">,</span> <span class="n">fcl</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">c</span><span class="p">,</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;samweb&quot;</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n</span><span class="p">,</span><span class="n">nskip</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">nskip</span><span class="p">,</span><span class="n">maxFiles</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">maxFiles</span><span class="p">,</span> <span class="n">dataTier</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">dataTier</span><span class="p">,</span><span class="n">dataStream</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">dataStream</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Loginator 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">samtest</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Oregon State University.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+    </div>
+  </body>
+</html>

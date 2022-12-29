@@ -1,0 +1,595 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DDInterface &#8212; Loginator 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Loginator 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">DDInterface</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for DDInterface</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span> <span class="k">as</span> <span class="n">ap</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">submit_dd_jobs</span>
+
+<span class="sd">&#39;&#39;&#39; Data Dispatcher interface</span>
+<span class="sd">Mainly written by Jacob Calcutt, 2022</span>
+<span class="sd">Mods for logging outputs by H. Schellman, 2022</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="c1"># makes it easier to build docs on mac without invoking the real code</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="s2">&quot;HOST&quot;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="ow">or</span> <span class="ow">not</span> <span class="s2">&quot;apple&quot;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;HOST&quot;</span><span class="p">]:</span>
+
+    <span class="kn">from</span> <span class="nn">data_dispatcher.api</span> <span class="kn">import</span> <span class="n">DataDispatcherClient</span>
+    <span class="kn">from</span> <span class="nn">data_dispatcher.api</span> <span class="kn">import</span> <span class="n">APIError</span>
+
+<span class="kn">import</span> <span class="nn">LArWrapper</span>
+<span class="kn">import</span> <span class="nn">Loginator</span>
+
+
+<span class="sd">&#39;&#39;&#39; utility codes &#39;&#39;&#39;</span>
+
+<span class="c1"># make a string out of none for formatted Printing</span>
+<span class="k">def</span> <span class="nf">NoneToString</span><span class="p">(</span><span class="n">thing</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">thing</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s2">&quot;-&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">thing</span>
+
+<span class="k">def</span> <span class="nf">makedid</span><span class="p">(</span><span class="n">namespace</span><span class="p">,</span><span class="n">name</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">namespace</span><span class="p">,</span><span class="n">name</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">call_and_retry</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">inner1</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">nretries</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">nretries</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;call_and_retry&quot;</span><span class="p">,</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+        <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">break</span>
+      <span class="k">except</span> <span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">,</span> <span class="n">APIError</span><span class="p">)</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Caught&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Will wait </span><span class="si">{</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">retry_time</span><span class="si">}</span><span class="s1"> seconds and try again&#39;</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">retry_time</span><span class="p">)</span>
+        <span class="n">nretries</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">nretries</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">:</span>
+      <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;call_and_retry&quot;</span><span class="p">,</span><span class="s1">&#39;Too many retries&#39;</span><span class="p">)</span>
+      <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+  <span class="k">return</span> <span class="n">inner1</span>
+
+<span class="k">def</span> <span class="nf">call_and_retry_return</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+  <span class="k">def</span> <span class="nf">inner1</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="n">nretries</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">nretries</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+      <span class="k">try</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;call_and_retry_return&quot;</span><span class="p">,</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">break</span>
+      <span class="k">except</span> <span class="p">(</span><span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">,</span> <span class="n">APIError</span><span class="p">)</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Caught&#39;</span><span class="p">,</span> <span class="n">err</span><span class="o">.</span><span class="n">args</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Will wait </span><span class="si">{</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">retry_time</span><span class="si">}</span><span class="s1"> and try again&#39;</span><span class="p">)</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">retry_time</span><span class="p">)</span>
+        <span class="n">nretries</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="n">nretries</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">:</span>
+      <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;call_and_retry_return&quot;</span><span class="p">,</span><span class="s1">&#39;Too many retries&#39;</span><span class="p">)</span>
+      <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
+  <span class="k">return</span> <span class="n">inner1</span>
+
+
+
+<div class="viewcode-block" id="DDInterface"><a class="viewcode-back" href="../Modules.html#DDInterface.DDInterface">[docs]</a><span class="k">class</span> <span class="nc">DDInterface</span><span class="p">:</span>
+  <span class="sd">&#39;&#39;&#39; Interface to the Data Dispatcher</span>
+<span class="sd">  &#39;&#39;&#39;</span>
+  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">namespace</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lar_limit</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">wait_time</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">wait_limit</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>\
+   <span class="n">appFamily</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">appName</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">appVersion</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">workflowMethod</span><span class="o">=</span><span class="s2">&quot;dd&quot;</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Main interface for the data Dispatcher</span>
+
+<span class="sd">    :param debug: add printout and send stdout to console instead of a files</span>
+<span class="sd">    :type debug: bool</span>
+
+<span class="sd">    :param dataset: data dispatcher dataset did</span>
+<span class="sd">    :type dataset: stream</span>
+
+<span class="sd">    :param lar_limit: maximum number of files to deliver</span>
+<span class="sd">    :type lar_limit: int</span>
+
+<span class="sd">    :param appFamily: Optional Information about process</span>
+<span class="sd">    :type appFamily: str</span>
+
+<span class="sd">    :param appVersion: Optional Information about process</span>
+<span class="sd">    :type appVersion: str</span>
+
+<span class="sd">    :param appName: Optional Information about process</span>
+<span class="sd">    :type appName: str</span>
+
+<span class="sd">    :return: the lar return code</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">limit</span> <span class="o">=</span> <span class="mi">1</span><span class="c1">#limit</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">namespace</span> <span class="o">=</span> <span class="n">namespace</span>
+
+    <span class="sd">&#39;&#39;&#39; namespace is an extra qualifier used in tests - deprecated &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">namespace</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;files from </span><span class="si">%s</span><span class="s1"> limit </span><span class="si">%i</span><span class="s1">&#39;&#39;&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">query_args</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">namespace</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;files from </span><span class="si">%s</span><span class="s1"> where namespace=&quot;</span><span class="si">%s</span><span class="s1">&quot; limit </span><span class="si">%i</span><span class="s1">&#39;&#39;&#39;</span><span class="o">%</span><span class="n">query_args</span>  <span class="c1"># this is not a good idea</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="n">debug</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span> <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;DDInterface: the query is:&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">worker_timeout</span> <span class="o">=</span> <span class="mi">3600</span><span class="o">*</span><span class="mi">5</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lar_limit</span> <span class="o">=</span> <span class="n">lar_limit</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">proj_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">proj_exists</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">proj_state</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># list of files with all the replicas for worker to choose from</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">input_replicas</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># list of the replicas actually sent to Lar</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">loaded_file_uris</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">loaded</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">dd_timeout</span> <span class="o">=</span> <span class="n">timeout</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">wait_time</span> <span class="o">=</span> <span class="n">wait_time</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">max_wait_attempts</span> <span class="o">=</span> <span class="n">wait_limit</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">hit_timeout</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lar_return</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lar_file_list</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">n_waited</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">next_failed</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">next_replicas</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">appFamily</span> <span class="o">=</span> <span class="n">appFamily</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">appName</span> <span class="o">=</span> <span class="n">appName</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">appVersion</span> <span class="o">=</span> <span class="n">appVersion</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">deliveryMethod</span><span class="o">=</span><span class="s2">&quot;dd&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">workflowMethod</span><span class="o">=</span><span class="n">workflowMethod</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">unused_files</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">retry_time</span> <span class="o">=</span> <span class="n">wait_time</span>
+
+
+    <span class="c1">#try:</span>
+    <span class="c1">#  from data_dispatcher.api import DataDispatcherClient</span>
+    <span class="c1">#  from data_dispatcher.api import APIError</span>
+    <span class="c1">#  print(&#39;Loaded DataDispatcher&#39;)</span>
+    <span class="c1">#except:</span>
+    <span class="c1">#  print(&#39;Failed DataDispatcher&#39;)</span>
+    <span class="c1">#  pass</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">dd_client</span> <span class="o">=</span> <span class="n">DataDispatcherClient</span><span class="p">()</span>
+
+  <span class="nd">@call_and_retry</span>
+  <span class="k">def</span> <span class="nf">Login</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
+
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get credentials for DD and metacat</span>
+<span class="sd">    :param username: username (normally fnal service account)</span>
+<span class="sd">    :type username: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Try to login:&quot;</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">dd_client</span><span class="o">.</span><span class="n">login_x509</span><span class="p">(</span><span class="n">username</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;X509_USER_PROXY&#39;</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Login:&quot;</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+
+
+  <span class="k">def</span> <span class="nf">SetLarLimit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">limit</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">lar_limit</span> <span class="o">=</span> <span class="n">limit</span>
+
+  <span class="k">def</span> <span class="nf">CreateProject</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Start a data dispatcher project</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">query_files</span> <span class="o">=</span> <span class="n">mc_client</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">)</span>
+    <span class="n">proj_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dd_client</span><span class="o">.</span><span class="n">create_project</span><span class="p">(</span>
+        <span class="n">query_files</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">,</span> <span class="n">worker_timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">worker_timeout</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;CreateProject&quot;</span><span class="p">,</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">proj_state</span> <span class="o">=</span> <span class="n">proj_dict</span><span class="p">[</span><span class="s1">&#39;state&#39;</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">proj_id</span> <span class="o">=</span> <span class="n">proj_dict</span><span class="p">[</span><span class="s1">&#39;project_id&#39;</span><span class="p">]</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">proj_exists</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="c1">#print(proj_dict)</span>
+
+  <span class="k">def</span> <span class="nf">PrintFiles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Printing files&#39;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">:</span>
+      <span class="nb">print</span><span class="p">(</span><span class="n">j</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
+
+  <span class="nd">@call_and_retry</span>
+  <span class="k">def</span> <span class="nf">next_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Ask the project for a new file to process</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">next_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dd_client</span><span class="o">.</span><span class="n">next_file</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proj_id</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dd_timeout</span><span class="p">,</span>
+        <span class="n">worker_id</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;MYWORKERID&#39;</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;next_file &quot;</span><span class="p">,</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+
+  <span class="nd">@call_and_retry</span>
+  <span class="k">def</span> <span class="nf">file_done</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">did</span><span class="p">):</span>
+
+      <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">      Mark file as done</span>
+<span class="sd">      :param did: did &lt;namespace&gt;:&lt;filename&gt; of finished file</span>
+<span class="sd">      :type did: str</span>
+<span class="sd">      &quot;&quot;&quot;</span>
+      <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;try to mark file done&quot;</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">dd_client</span><span class="o">.</span><span class="n">file_done</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_id</span><span class="p">,</span> <span class="n">did</span><span class="p">)</span>
+      <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;file_done &quot;</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+
+  <span class="nd">@call_and_retry</span>
+  <span class="k">def</span> <span class="nf">file_failed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">did</span><span class="p">,</span> <span class="n">do_retry</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;try to mark file failed&quot;</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">dd_client</span><span class="o">.</span><span class="n">file_failed</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proj_id</span><span class="p">,</span> <span class="n">did</span><span class="p">,</span>
+        <span class="c1">#&#39;%s:%s&#39;%(self.next_output[&#39;namespace&#39;], self.next_output[&#39;name&#39;]),</span>
+        <span class="n">retry</span><span class="o">=</span><span class="n">do_retry</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;file_failed &quot;</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+
+  <span class="nd">@call_and_retry_return</span>
+  <span class="k">def</span> <span class="nf">get_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proj_id</span><span class="p">):</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;try to get project&quot;</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+    <span class="n">proj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dd_client</span><span class="o">.</span><span class="n">get_project</span><span class="p">(</span><span class="n">proj_id</span><span class="p">,</span> <span class="n">with_files</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="n">proj</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;get_project&quot;</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">proj</span>
+
+
+  <span class="k">def</span> <span class="nf">dump_project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proj_id</span><span class="p">):</span>
+    <span class="n">proj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dd_client</span><span class="o">.</span><span class="n">get_project</span><span class="p">(</span><span class="n">proj_id</span><span class="p">,</span> <span class="n">with_files</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;dumping project&quot;</span><span class="p">,</span><span class="n">proj_id</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">proj</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="s2">&quot;file_handles&quot;</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="nb">print</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span><span class="n">proj</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">proj</span><span class="p">[</span><span class="s2">&quot;file_handles&quot;</span><span class="p">]:</span>
+        <span class="n">reserved</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s2">&quot;reserved_since&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">reserved</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">reserved</span> <span class="o">=</span> <span class="s2">&quot;-&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">reserved</span><span class="p">,</span><span class="n">tz</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">)</span>
+            <span class="n">reserved</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()[</span><span class="mi">0</span><span class="p">:</span><span class="mi">19</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;Z&#39;</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%10s</span><span class="se">\t</span><span class="si">%d</span><span class="se">\t</span><span class="si">%21s</span><span class="se">\t</span><span class="si">%8s</span><span class="se">\t</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s2">&quot;state&quot;</span><span class="p">],</span><span class="n">f</span><span class="p">[</span><span class="s2">&quot;attempts&quot;</span><span class="p">],(</span><span class="n">reserved</span><span class="p">),</span><span class="n">NoneToString</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s2">&quot;worker_id&quot;</span><span class="p">]),</span><span class="n">f</span><span class="p">[</span><span class="s2">&quot;namespace&quot;</span><span class="p">],</span><span class="n">f</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]))</span>
+
+
+  <span class="k">def</span> <span class="nf">LoadFiles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="c1">##Should we take out the proj_state clause?</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">count</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">lar_limit</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_failed</span><span class="p">):</span> <span class="c1">#and</span>
+           <span class="c1">#self.proj_state == &#39;active&#39;):</span>
+      <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Loadfiles: Attempting fetch </span><span class="si">%i</span><span class="s1">/</span><span class="si">%i</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lar_limit</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_failed</span><span class="p">)</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">Next</span><span class="p">()</span>
+      <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_output</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1">## this shouldn&#39;t happen, but if it does just exit the loop</span>
+        <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;next_output = None&quot;</span><span class="p">)</span>
+        <span class="k">break</span>
+      <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_output</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="c1">##this means the fetch timed out.</span>
+
+        <span class="c1">##First --&gt; check that there are files reserved by other jobs.</span>
+        <span class="c1">##          If there aren&#39;t, just exit the loop and try processing</span>
+        <span class="c1">##          any files (if any) we have</span>
+        <span class="c1">#file_handles = self.dd_client.get_project(self.proj_id)[&#39;file_handles&#39;]</span>
+        <span class="c1">#total_reserved = sum([fh[&#39;state&#39;] == &#39;reserved&#39; for fh in file_handles])</span>
+        <span class="c1">#if total_reserved == count:</span>
+        <span class="c1">#  print(&#39;Equal number of reserved and loaded files. Ending loop&#39;)</span>
+        <span class="c1">#  break</span>
+        <span class="c1">#elif total_reserved &lt; count:</span>
+        <span class="c1">#  ##This shouldn&#39;t happen... If it does, fail and make some noise</span>
+        <span class="c1">#  sys.stderr.write(&quot;Something bad happened. N reserved in project &lt; n reserved in this job: (%i/%i) \n&quot;%(total_reserved, count))</span>
+        <span class="c1">#  sys.exit(1)</span>
+        <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+          <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;data dispatcher next_file timed out. This job has at least one file reserved. Will continue.&#39;</span><span class="p">)</span>
+          <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="c1">##We know we have externally-reserved files.</span>
+          <span class="c1">##try waiting a user-defined amount of time</span>
+          <span class="c1">##for a maximum number of attempts</span>
+          <span class="c1">##-- if at max, go on to loop</span>
+          <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_waited</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_wait_attempts</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;data dispatcher next_file timed out. Waiting </span><span class="si">%i</span><span class="s2"> seconds before attempting again&quot;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">wait_time</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Wait attempts: </span><span class="si">%i</span><span class="s2">/</span><span class="si">%i</span><span class="s2">&quot;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_waited</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_wait_attempts</span><span class="p">))</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wait_time</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">n_waited</span> <span class="o">+=</span> <span class="mi">1</span>
+          <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Hit max wait limit. Ending attempts to load files&quot;</span><span class="p">)</span>
+            <span class="k">break</span>
+      <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_output</span> <span class="o">==</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="c1">##this means the project is done -- just exit the loop.</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Project is done -- exiting file fetch loop&quot;</span><span class="p">)</span>
+        <span class="k">break</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="c1">##we successfully got a file (at least nominally). Check that it has replicas available.</span>
+        <span class="c1">##If it doesn&#39;t, compromise it to a permament end</span>
+        <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;got a file&quot;</span><span class="p">,</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">next_replicas</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">next_output</span><span class="p">)</span>
+          <span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+          <span class="c1">##also reset the number of times waited</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">n_waited</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Empty replicas -- marking as failed&#39;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">next_output</span><span class="p">)</span>
+          <span class="bp">self</span><span class="o">.</span><span class="n">file_failed</span><span class="p">(</span>
+              <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">next_output</span><span class="p">[</span><span class="s1">&#39;namespace&#39;</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_output</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]),</span>
+              <span class="n">do_retry</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">loaded</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Loaded </span><span class="si">%i</span><span class="s2"> files. Moving on.&quot;</span><span class="o">%</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">PrintFiles</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">Next</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_id</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;DDInterface::Next -- Project ID is </span><span class="si">%i</span><span class="s1">. Has a project been created?&#39;</span><span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_id</span><span class="p">)</span>
+    <span class="c1">## exists, state, etc. -- TODO</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">next_file</span><span class="p">()</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_output</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">next_failed</span> <span class="o">=</span> <span class="kc">True</span>
+      <span class="k">return</span>
+
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">next_output</span><span class="p">)</span> <span class="o">==</span> <span class="nb">dict</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">next_replicas</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">next_output</span><span class="p">[</span><span class="s1">&#39;replicas&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+
+  <span class="k">def</span> <span class="nf">MarkFiles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">failed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">badlist</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="n">state</span> <span class="o">=</span> <span class="s1">&#39;failed&#39;</span> <span class="k">if</span> <span class="n">failed</span> <span class="k">else</span> <span class="s1">&#39;done&#39;</span>
+    <span class="c1">#nretries = 0</span>
+
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">:</span>
+      <span class="n">did</span> <span class="o">=</span> <span class="n">makedid</span><span class="p">(</span><span class="n">j</span><span class="p">[</span><span class="s1">&#39;namespace&#39;</span><span class="p">],</span> <span class="n">j</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">])</span>
+      <span class="c1"># mark all as failed if that is how things are set</span>
+      <span class="k">if</span> <span class="n">failed</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Marking failed&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_failed</span><span class="p">(</span><span class="n">did</span><span class="p">)</span>
+      <span class="c1"># ok, maybe some failed,</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">good</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">badlist</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">did</span> <span class="o">==</span> <span class="n">b</span><span class="p">:</span>
+                <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;this file was not used, mark as failed&quot;</span><span class="p">,</span><span class="n">did</span><span class="p">)</span>
+                <span class="n">good</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">good</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Marking done&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_done</span><span class="p">(</span><span class="n">did</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Marked as done&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Marking failed&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_failed</span><span class="p">(</span><span class="n">did</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Marked as failed&#39;</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">SaveFileDIDs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">lines</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">)):</span>
+      <span class="n">f</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+      <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;{&quot;did&quot;:&quot;</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">&quot;},</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;namespace&#39;</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]))</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;{&quot;did&quot;:&quot;</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">&quot;}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;namespace&#39;</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]))</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;loaded_files.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+      <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
+
+  <span class="k">def</span> <span class="nf">SetWorkerID</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;MYWORKERID&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dd_client</span><span class="o">.</span><span class="n">new_worker_id</span><span class="p">()</span>
+
+  <span class="k">def</span> <span class="nf">AttachProject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proj_id</span><span class="p">):</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">proj_id</span> <span class="o">=</span> <span class="n">proj_id</span>
+    <span class="c1">#proj = self.dd_client.get_project(proj_id, with_files=False)</span>
+    <span class="c1">#proj = self.get_project(proj_id)</span>
+    <span class="c1">#print(proj)</span>
+    <span class="c1">#if proj == None:</span>
+    <span class="c1">#  self.proj_exists = False</span>
+    <span class="c1">#else:</span>
+    <span class="c1">#  self.proj_exists = True</span>
+    <span class="c1">#  self.proj_state = proj[&#39;state&#39;]</span>
+
+  <span class="k">def</span> <span class="nf">BuildFileListString</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">:</span>
+      <span class="n">replicas</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">j</span><span class="p">[</span><span class="s1">&#39;replicas&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+      <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;possible replicas&quot;</span><span class="p">,</span><span class="n">replicas</span><span class="p">)</span>
+      <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">replicas</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1">#Get the last replica</span>
+        <span class="c1">#replica = replicas[len(replicas)-1]</span>
+        <span class="n">replica</span> <span class="o">=</span> <span class="n">replicas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># go with first.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_replicas</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">replica</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Replica:&#39;</span><span class="p">,</span> <span class="n">replica</span><span class="p">)</span>
+        <span class="n">uri</span> <span class="o">=</span> <span class="n">replica</span><span class="p">[</span><span class="s1">&#39;url&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;https://eospublic.cern.ch/e&#39;</span> <span class="ow">in</span> <span class="n">uri</span><span class="p">:</span> <span class="n">uri</span> <span class="o">=</span> <span class="n">uri</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;https://eospublic.cern.ch/e&#39;</span><span class="p">,</span> <span class="s1">&#39;xroot://eospublic.cern.ch//e&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lar_file_list</span> <span class="o">+=</span> <span class="n">uri</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lar_file_list</span> <span class="o">+=</span> <span class="s1">&#39; &#39;</span>
+      <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Empty replicas -- marking as failed&#39;</span><span class="p">)</span>
+
+        <span class="c1">##TODO -- pop entry</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dd_client</span><span class="o">.</span><span class="n">file_failed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_id</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">j</span><span class="p">[</span><span class="s1">&#39;namespace&#39;</span><span class="p">],</span> <span class="n">j</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+
+  <span class="k">def</span> <span class="nf">RunLAr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fcl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">nskip</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;RunLAr&quot;</span><span class="p">,</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loaded_files</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No files loaded with data dispatcher. Exiting gracefully&#39;</span><span class="p">)</span>
+      <span class="k">return</span>
+
+    <span class="k">if</span> <span class="s1">&#39;CLUSTER&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span> <span class="ow">and</span> <span class="s1">&#39;PROCESS&#39;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+      <span class="n">cluster</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;CLUSTER&#39;</span><span class="p">]</span>
+      <span class="n">process</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;PROCESS&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+      <span class="n">cluster</span> <span class="o">=</span> <span class="s1">&#39;0&#39;</span>
+      <span class="n">process</span> <span class="o">=</span> <span class="s1">&#39;0&#39;</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;RunLAr called with &quot;</span><span class="p">,</span><span class="n">fcl</span><span class="p">,</span><span class="n">n</span><span class="p">,</span><span class="n">nskip</span><span class="p">)</span>
+    <span class="n">unused_files</span> <span class="o">=</span> <span class="p">[]</span>
+      <span class="c1"># new interface that does not talk to dd</span>
+    <span class="n">lar</span> <span class="o">=</span> <span class="n">LArWrapper</span><span class="o">.</span><span class="n">LArWrapper</span><span class="p">(</span><span class="n">debug</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">,</span> <span class="n">fcl</span><span class="o">=</span><span class="n">fcl</span><span class="p">,</span> <span class="n">o</span><span class="o">=</span><span class="s2">&quot;temp.root&quot;</span><span class="p">,</span> <span class="n">replicas</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">input_replicas</span><span class="p">,</span> <span class="n">flist</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lar_file_list</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span> <span class="n">nskip</span><span class="o">=</span><span class="n">nskip</span><span class="p">,</span> <span class="n">appFamily</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">appFamily</span><span class="p">,</span> <span class="n">appName</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">appName</span><span class="p">,</span> <span class="n">appVersion</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">appVersion</span><span class="p">,</span> <span class="n">deliveryMethod</span><span class="o">=</span><span class="s2">&quot;dd&quot;</span><span class="p">,</span> <span class="n">workflowMethod</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">workflowMethod</span><span class="p">,</span> <span class="n">projectID</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proj_id</span><span class="p">,</span> <span class="n">formatString</span><span class="o">=</span><span class="s2">&quot;runLar_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%%</span><span class="s2">tc_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2">.root&quot;</span><span class="p">)</span>
+    <span class="n">returncode</span> <span class="o">=</span> <span class="n">lar</span><span class="o">.</span><span class="n">DoLAr</span><span class="p">(</span><span class="n">cluster</span><span class="p">,</span> <span class="n">process</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">unused_files</span> <span class="o">=</span> <span class="n">lar</span><span class="o">.</span><span class="n">LArResults</span><span class="p">()</span>
+
+    <span class="c1"># make all files as bad if job crashed</span>
+    <span class="k">if</span> <span class="n">returncode</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">MarkFiles</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+      <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;LAr returned&quot;</span><span class="p">,</span> <span class="n">returncode</span><span class="p">)</span>
+      <span class="k">return</span> <span class="n">returncode</span>
+
+    <span class="c1"># else go through files and mark the ones closed in the logfile as good</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">MarkFiles</span><span class="p">(</span><span class="kc">False</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">unused_files</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">SaveFileDIDs</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">returncode</span></div>
+
+<span class="sd">&quot;&quot;&quot; driver test &quot;&quot;&quot;</span>
+
+<span class="k">def</span> <span class="nf">driver</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; driver for DDInterface</span>
+<span class="sd">    .. param: args (parsed arguments)</span>
+<span class="sd">    .. type: []</span>
+<span class="sd">    .. return: lar return code</span>
+<span class="sd">    .. rtype: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">dd_interface</span> <span class="o">=</span> <span class="n">DDInterface</span><span class="p">(</span> <span class="n">lar_limit</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">load_limit</span><span class="p">,</span>
+                             <span class="n">timeout</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">timeout</span><span class="p">,</span>
+                             <span class="n">wait_time</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">wait_time</span><span class="p">,</span>
+                             <span class="n">wait_limit</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">wait_limit</span><span class="p">,</span>
+                             <span class="n">appFamily</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">appFamily</span><span class="p">,</span>
+                             <span class="n">appName</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">appName</span><span class="p">,</span>
+                             <span class="n">appVersion</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">appVersion</span><span class="p">,</span>
+                             <span class="n">workflowMethod</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">workflowMethod</span><span class="p">,</span>
+                             <span class="n">namespace</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">namespace</span><span class="p">,</span>
+                             <span class="n">dataset</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+    <span class="n">dd_interface</span><span class="o">.</span><span class="n">Login</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+    <span class="n">dd_interface</span><span class="o">.</span><span class="n">SetWorkerID</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;MYWORKERID&#39;</span><span class="p">])</span>
+    <span class="n">dd_interface</span><span class="o">.</span><span class="n">AttachProject</span><span class="p">(</span><span class="n">dd_proj_id</span><span class="p">)</span>
+    <span class="c1">#dd_interface.dump_project(dd_proj_id)</span>
+    <span class="n">dd_interface</span><span class="o">.</span><span class="n">LoadFiles</span><span class="p">()</span>
+    <span class="n">dd_interface</span><span class="o">.</span><span class="n">BuildFileListString</span><span class="p">()</span>
+    <span class="n">retcode</span> <span class="o">=</span> <span class="n">dd_interface</span><span class="o">.</span><span class="n">RunLAr</span><span class="p">(</span><span class="n">fcl</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">nskip</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">nskip</span><span class="p">)</span>
+    <span class="n">dd_interface</span><span class="o">.</span><span class="n">dump_project</span><span class="p">(</span><span class="n">dd_proj_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">retcode</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="sd">&#39;&#39;&#39; run_lar</span>
+<span class="sd">    .. cmdoption:: --dataset &lt;dataset&gt;</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">ap</span><span class="p">()</span>
+    <span class="c1"># dd args</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--dataset&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;schellma:run5141recentReco&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--load_limit&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="s1">&#39;number of files to give to lar&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--namespace&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;optional namespace qualifier for dataset&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--query_limit&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--query_skip&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--projectID&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;dd projectID, overrides dataset&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--timeout&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">120</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--wait_time&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">120</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--wait_limit&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--workflowMethod&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;batch&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span> <span class="s1">&#39;workflow method [interactive,batch,wfs]&#39;</span><span class="p">)</span>
+    <span class="c1"># args shared with lar</span>
+
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--appFamily&#39;</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39; application family&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--appName&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;test&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39; application name&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--appVersion&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s1">&#39;DUNESW_VERSION&#39;</span><span class="p">),</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;application version&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--dataTier&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;out1:sam-user&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;samweb data tier for output file&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--dataStream&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;out1:test&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;samweb data stream for output file&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;temp.root&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;output event stream file&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;name of fcl file&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--user&#39;</span><span class="p">,</span> <span class="n">default</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;USER&quot;</span><span class="p">),</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;user name&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-n&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;number of events total to process&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--nskip&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;number of events to skip before starting&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--debug&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">help</span><span class="o">=</span> <span class="s1">&#39;debug&#39;</span><span class="p">)</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+
+
+
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-----------------------------------------------------------------------------------&quot;</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;DDInterface arguments:</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">theargs</span> <span class="o">=</span> <span class="nb">vars</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">theargs</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">theargs</span><span class="p">[</span><span class="n">a</span><span class="p">])</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;-----------------------------------------------------------------------------------&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">projectID</span><span class="p">)</span> <span class="ow">and</span> <span class="n">args</span><span class="o">.</span><span class="n">dataset</span><span class="p">:</span>
+        <span class="n">dd_proj_id</span> <span class="o">=</span> <span class="n">submit_dd_jobs</span><span class="o">.</span><span class="n">create_project</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">namespace</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">namespace</span><span class="p">,</span>
+                                  <span class="n">query_limit</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">query_limit</span><span class="p">,</span>
+                                  <span class="n">query_skip</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">query_skip</span><span class="p">,</span><span class="n">debug</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">debug</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">projectID</span><span class="p">:</span>
+        <span class="n">dd_proj_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">projectID</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Need to provide project OR dataset</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">retcode</span> <span class="o">=</span> <span class="n">driver</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;run_lar returned:&quot;</span><span class="p">,</span><span class="n">retcode</span><span class="p">)</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Loginator 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">DDInterface</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Oregon State University.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+    </div>
+  </body>
+</html>

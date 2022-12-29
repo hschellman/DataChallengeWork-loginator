@@ -1,0 +1,331 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LArWrapper &#8212; Loginator 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/nature.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Loginator 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">LArWrapper</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for LArWrapper</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Wrapper for LAr that supports both sam and dd access &quot;&quot;&quot;</span>
+<span class="c1">##</span>
+<span class="c1"># @mainpage LArWrapper.py</span>
+<span class="c1">#</span>
+<span class="c1"># @section description_main A wrapper for lar that uses loginator to parse logs and finds unprocessed files.</span>
+<span class="c1">#</span>
+<span class="c1"># Copyright (c) 2022 Heidi Schellman, Oregon State University</span>
+<span class="c1">##</span>
+<span class="c1"># @file LArWrapper.py</span>
+
+
+<span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span> <span class="k">as</span> <span class="n">ap</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">Loginator</span>
+
+<span class="c1">## class that wraps lar - tries to have similar arguments.</span>
+
+<div class="viewcode-block" id="LArWrapper"><a class="viewcode-back" href="../Modules.html#LArWrapper.LArWrapper">[docs]</a><span class="k">class</span> <span class="nc">LArWrapper</span><span class="p">:</span>
+    <span class="sd">&#39;&#39;&#39; LArWrapper - generic wrapper for LArSoft that works with samweb and dd &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">fcl</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">flist</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span><span class="n">o</span><span class="o">=</span><span class="s2">&quot;temp*.root&quot;</span><span class="p">,</span><span class="n">n</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">nskip</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">appFamily</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">appName</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>\
+     <span class="n">appVersion</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>  <span class="n">projectID</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sam_web_uri</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">processID</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">dataTier</span><span class="o">=</span><span class="s2">&quot;sam-user&quot;</span><span class="p">,</span> <span class="n">dataStream</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span>\
+     <span class="n">deliveryMethod</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">workflowMethod</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">formatString</span><span class="o">=</span><span class="s2">&quot;runLar_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%%</span><span class="s2">tc_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2">.root&quot;</span><span class="p">,</span>\
+     <span class="n">processHASH</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span><span class="n">replicas</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+         <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">         Many of the options are the same as those for lar</span>
+
+<span class="sd">         .. code-block:: shell</span>
+
+<span class="sd">                $lar -h #for more examples</span>
+
+<span class="sd">         :param debug: add printout and send stdout to console instead of a files</span>
+<span class="sd">         :type debug: bool</span>
+
+<span class="sd">         :param fcl: LAr option - fcl file to use</span>
+<span class="sd">         :type dataset: str</span>
+
+<span class="sd">         :param flist: LAr/dd option - list of space delimited files to process from dd</span>
+<span class="sd">         :type lar_limit: str</span>
+
+<span class="sd">         :param appFamily: LAr option - Optional Information about process</span>
+<span class="sd">         :type appFamily: str</span>
+
+<span class="sd">         :param appVersion:  LAr option - Optional Information about process</span>
+<span class="sd">         :type appVersion: str</span>
+
+<span class="sd">         :param appName:  LAr option - Optional Information about process</span>
+<span class="sd">         :type appName: str</span>
+
+<span class="sd">         :param projectID: LAr option - DD or samweb project ID</span>
+<span class="sd">         :type projectID: int</span>
+
+<span class="sd">         :param sam_web_uri: LAr/samweb option - samweb project url</span>
+<span class="sd">         :type sam_web_uri: str</span>
+
+<span class="sd">         :param processID: LAr/samweb option - samweb process ID</span>
+<span class="sd">         :type processID: int</span>
+
+<span class="sd">         :param processHASH: dd option - process ID from dd</span>
+<span class="sd">         :type processHASH: str</span>
+
+<span class="sd">         :param dataTier: LAr option - data tier for output</span>
+<span class="sd">         :type dataTier: str</span>
+
+<span class="sd">         :param dataStream: LAr option - data strem for output</span>
+<span class="sd">         :type dataStream: str</span>
+
+<span class="sd">         :param deliveryMethod: required parameter to tell samweb from dd/wfs</span>
+<span class="sd">         :type deliveryMethod: str</span>
+
+<span class="sd">         :param workflowMethod: optional parameter - batch/interactive/wfs</span>
+<span class="sd">         :type workflowMethod: str</span>
+
+<span class="sd">         :param formatString: optional format the output log names</span>
+<span class="sd">         :type formatString: str</span>
+<span class="sd">         :return: the lar return code</span>
+<span class="sd">         :rtype: int</span>
+<span class="sd">         &quot;&quot;&quot;</span>
+     <span class="c1"># lar arguments</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">fcl</span> <span class="o">=</span> <span class="n">fcl</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">flist</span> <span class="o">=</span> <span class="n">flist</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">nskip</span> <span class="o">=</span> <span class="n">nskip</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">o</span> <span class="o">=</span> <span class="n">o</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">appFamily</span> <span class="o">=</span> <span class="n">appFamily</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">appVersion</span> <span class="o">=</span> <span class="n">appVersion</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">appName</span> <span class="o">=</span> <span class="n">appName</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">projectID</span> <span class="o">=</span> <span class="n">projectID</span>
+         <span class="c1">## useful for samweb</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">sam_web_uri</span> <span class="o">=</span> <span class="n">sam_web_uri</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">processID</span> <span class="o">=</span> <span class="n">processID</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">dataTier</span> <span class="o">=</span> <span class="n">dataTier</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">dataStream</span> <span class="o">=</span> <span class="n">dataStream</span>
+         <span class="c1">## useful debuging</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">deliveryMethod</span> <span class="o">=</span> <span class="n">deliveryMethod</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">workflowMethod</span> <span class="o">=</span> <span class="n">workflowMethod</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">oname</span> <span class="o">=</span> <span class="kc">None</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">ename</span> <span class="o">=</span> <span class="kc">None</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span> <span class="o">=</span> <span class="kc">None</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="n">debug</span>
+        <span class="c1"># useful for dd</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">formatString</span> <span class="o">=</span> <span class="n">formatString</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">replicas</span> <span class="o">=</span> <span class="n">replicas</span>
+         <span class="bp">self</span><span class="o">.</span><span class="n">processHASH</span> <span class="o">=</span> <span class="n">processHASH</span>
+
+        <span class="c1">## the format string is used to create an output file name for stdout and err</span>
+         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">formatString</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">formatString</span> <span class="o">=</span> <span class="s2">&quot;process_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%%</span><span class="s2">tc_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2">_</span><span class="si">%s</span><span class="s2">.root&quot;</span>
+
+   <span class="c1">## actually run lar</span>
+    <span class="k">def</span> <span class="nf">DoLAr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">cluster</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">process</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39; Method to run the LAr code</span>
+
+<span class="sd">        :param cluster: batch cluster</span>
+<span class="sd">        :type cluster: int</span>
+
+<span class="sd">        :param process: batch process</span>
+<span class="sd">        :type process: int</span>
+
+<span class="sd">        :return: lar return code</span>
+<span class="sd">        :return: int</span>
+
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">stamp</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">%H%M%S%Z&quot;</span><span class="p">)</span>
+        <span class="n">fclname</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fcl</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;check fcl&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">fcl</span><span class="p">,</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fcl</span><span class="p">))</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;reading&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">flist</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">formatString</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">projectID</span><span class="p">,</span> <span class="n">cluster</span><span class="p">,</span> <span class="n">process</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fcl</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.fcl&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
+        <span class="n">fname</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">formatString</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">deliveryMethod</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">projectID</span><span class="p">,</span> <span class="n">cluster</span><span class="p">,</span> <span class="n">process</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fcl</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.fcl&quot;</span><span class="p">,</span><span class="s2">&quot;&quot;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">oname</span> <span class="o">=</span> <span class="n">fname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.root&quot;</span><span class="p">,</span><span class="s2">&quot;.out&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;%tc&quot;</span><span class="p">,</span><span class="n">stamp</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ename</span> <span class="o">=</span> <span class="n">fname</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;.root&quot;</span><span class="p">,</span><span class="s2">&quot;.err&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;%tc&quot;</span><span class="p">,</span><span class="n">stamp</span><span class="p">)</span>
+        <span class="n">ofile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">oname</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="n">efile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ename</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+        <span class="c1"># data dispatcher case</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">deliveryMethod</span> <span class="o">==</span> <span class="s2">&quot;dd&quot;</span><span class="p">:</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="s1">&#39;lar -c </span><span class="si">%s</span><span class="s1"> -s </span><span class="si">%s</span><span class="s1"> -n </span><span class="si">%i</span><span class="s1"> --nskip </span><span class="si">%i</span><span class="s1"> -o </span><span class="si">%s</span><span class="s1"> --sam-data-tier </span><span class="si">%s</span><span class="s1"> --sam-stream-name </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fcl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flist</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nskip</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">o</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataTier</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataStream</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;LArWrapper dd cmd = &quot;</span><span class="p">,</span><span class="n">cmd</span><span class="p">)</span>
+            <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">ofile</span><span class="p">,</span><span class="n">stderr</span><span class="o">=</span><span class="n">efile</span><span class="p">)</span>
+
+        <span class="c1"># samweb case</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">deliveryMethod</span> <span class="o">==</span> <span class="s2">&quot;samweb&quot;</span><span class="p">:</span>
+            <span class="n">lar_cmd</span> <span class="o">=</span> <span class="s1">&#39;lar -c </span><span class="si">%s</span><span class="s1"> -n </span><span class="si">%i</span><span class="s1"> --sam-web-uri=</span><span class="si">%s</span><span class="s1"> --sam-process-id=</span><span class="si">%s</span><span class="s1"> --sam-application-family=</span><span class="si">%s</span><span class="s1"> </span><span class="se">\</span>
+<span class="s1">             --sam-application-version=</span><span class="si">%s</span><span class="s1"> --sam-data-tier </span><span class="si">%s</span><span class="s1"> --sam-stream-name </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fcl</span><span class="p">,</span>\
+             <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">sam_web_uri</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">processID</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">appFamily</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">appVersion</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dataTier</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">dataStream</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="n">lar_cmd</span><span class="p">)</span>
+            <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">lar_cmd</span><span class="p">,</span><span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">ofile</span><span class="p">,</span><span class="n">stderr</span><span class="o">=</span><span class="n">efile</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># assume it&#39;s something like interactive</span>
+            <span class="n">cmd</span> <span class="o">=</span> <span class="s1">&#39;lar -c </span><span class="si">%s</span><span class="s1"> -s </span><span class="si">%s</span><span class="s1"> -n </span><span class="si">%i</span><span class="s1"> --nskip </span><span class="si">%i</span><span class="s1"> -o </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fcl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flist</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nskip</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;cmd = &quot;</span><span class="p">,</span><span class="n">cmd</span><span class="p">)</span>
+            <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">ofile</span><span class="p">,</span><span class="n">stderr</span><span class="o">=</span><span class="n">efile</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">returncode</span>
+        <span class="n">ofile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">efile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">returncode</span>
+
+<span class="c1">## here we get some information about how things went from the log file and other sources</span>
+    <span class="k">def</span> <span class="nf">LArResults</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="c1"># get log info, match with replicas</span>
+        <span class="n">logparse</span> <span class="o">=</span> <span class="n">Loginator</span><span class="o">.</span><span class="n">Loginator</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">oname</span><span class="p">)</span>
+        <span class="n">logparse</span><span class="o">.</span><span class="n">readme</span><span class="p">()</span>  <span class="c1"># get info from the logfile</span>
+<span class="c1"># build up some information</span>
+        <span class="n">info</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;application_family&quot;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">appFamily</span><span class="p">,</span><span class="s2">&quot;application_name&quot;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">appName</span><span class="p">,</span> <span class="s2">&quot;application_version&quot;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">appVersion</span><span class="p">,</span>\
+        <span class="s2">&quot;delivery_method&quot;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">deliveryMethod</span><span class="p">,</span><span class="s2">&quot;workflow_method&quot;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">workflowMethod</span><span class="p">,</span><span class="s2">&quot;project_id&quot;</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">projectID</span><span class="p">,</span><span class="s2">&quot;fcl&quot;</span><span class="p">:</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fcl</span><span class="p">)}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span> <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;delivery method&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">deliveryMethod</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">deliveryMethod</span> <span class="o">==</span> <span class="s2">&quot;dd&quot;</span><span class="p">:</span>
+            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;dd_worker_id&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">processHASH</span>
+            <span class="c1"># dig around in replicas and see if we didn&#39;t use some of them, if so, tell the calling program</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">replicas</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">unused_replicas</span> <span class="o">=</span> <span class="n">logparse</span><span class="o">.</span><span class="n">addreplicainfo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">replicas</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">unused_replicas</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">unused_files</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">unused_replicas</span><span class="p">:</span>
+                <span class="n">unused_files</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">u</span><span class="p">[</span><span class="s2">&quot;namespace&quot;</span><span class="p">]</span><span class="o">+</span><span class="s2">&quot;:&quot;</span><span class="o">+</span><span class="n">u</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">])</span>
+
+            <span class="c1"># ask metacat for info about each file</span>
+            <span class="n">logparse</span><span class="o">.</span><span class="n">addmetacatinfo</span><span class="p">()</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;files not used&quot;</span><span class="p">,</span><span class="n">unused_files</span><span class="p">)</span>
+
+        <span class="c1"># samweb info if not using dd</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">deliveryMethod</span> <span class="o">==</span> <span class="s2">&quot;samweb&quot;</span><span class="p">:</span>
+            <span class="c1">#unused_files = logparse.findmissingfiles(self.files)</span>
+            <span class="n">info</span><span class="p">[</span><span class="s2">&quot;process_id&quot;</span><span class="p">]</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">processID</span>
+            <span class="n">logparse</span><span class="o">.</span><span class="n">addsaminfo</span><span class="p">()</span>
+            <span class="n">unused_files</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># heck if I know what to do.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;unknown delivery mechanism&quot;</span><span class="p">)</span>
+
+        <span class="c1"># add in the information from the system and wrapper initialization</span>
+        <span class="n">logparse</span><span class="o">.</span><span class="n">addinfo</span><span class="p">(</span><span class="n">info</span><span class="p">)</span>
+        <span class="n">logparse</span><span class="o">.</span><span class="n">addsysinfo</span><span class="p">()</span>
+
+        <span class="c1"># write out json files for processed files whether closed properly or not.  Those never opened don&#39;t get logged.</span>
+        <span class="n">logparse</span><span class="o">.</span><span class="n">writeme</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">unused_files</span>
+
+    <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">ap</span><span class="p">()</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--delivery_method&#39;</span><span class="p">,</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;[&quot;samweb&quot;,&quot;dd&quot;,&quot;wfs&quot;]&#39;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--workflow_method&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;[&quot;samweb&quot;,&quot;dd&quot;,&quot;wfs&quot;]&#39;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--processHASH&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;string code generated by dd for worker&#39;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--processID&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;processID generated by samweb&#39;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--sam_web_uri&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;samweb url for the project&#39;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--appFamily&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;test&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;samweb needs this&#39;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--appName&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;samweb needs this&#39;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--appVersion&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;samweb needs this&#39;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--dataTier&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;data tier for output file if only one&#39;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--dataStream&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;data stream for output file if only one&#39;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;temp.root&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;output root file&#39;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-c&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;name of fcl file&#39;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--user&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;user name&#39;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--projectID&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;integer that identifies the project, samweb/dd/wfs&#39;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--timeout&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">120</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--wait_time&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">120</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--wait_limit&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-n&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;number of events total to process&#39;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--nskip&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;number of events to skip before starting&#39;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--formatString&#39;</span><span class="p">,</span> <span class="nb">type</span> <span class="o">=</span> <span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;runLar_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%%</span><span class="s1">tc_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">_</span><span class="si">%s</span><span class="s1">.root&#39;</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="s1">&#39;format string used by LarWrapper for logs&#39;</span><span class="p">)</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--debug&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+        <span class="nb">print</span> <span class="p">(</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">processHASH</span> <span class="o">==</span> <span class="kc">None</span> <span class="ow">and</span> <span class="s2">&quot;MYWORKERID&quot;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">processHASH</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">(</span><span class="s2">&quot;MYWORKERID&quot;</span><span class="p">)</span>
+        <span class="n">lar</span> <span class="o">=</span> <span class="n">LArWrapper</span><span class="p">(</span><span class="n">fcl</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">c</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="n">nskip</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">nskip</span><span class="p">,</span> <span class="n">appFamily</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">appFamily</span><span class="p">,</span><span class="n">appName</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">appName</span><span class="p">,</span>
+        <span class="n">appVersion</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;DUNESW_VERSION&quot;</span><span class="p">),</span> <span class="n">deliveryMethod</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">delivery_method</span><span class="p">,</span> <span class="n">workflowMethod</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">workflow_method</span><span class="p">,</span>
+        <span class="n">processID</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">processID</span><span class="p">,</span> <span class="n">processHASH</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">processHASH</span><span class="p">,</span> <span class="n">projectID</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">projectID</span><span class="p">,</span> <span class="n">sam_web_uri</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">sam_web_uri</span><span class="p">,</span>
+        <span class="n">debug</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">debug</span><span class="p">,</span> <span class="n">formatString</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">formatString</span><span class="p">)</span>
+        <span class="n">returncode</span> <span class="o">=</span> <span class="n">lar</span><span class="o">.</span><span class="n">DoLAr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">args</span><span class="o">.</span><span class="n">processID</span><span class="p">)</span>
+
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">returncode</span><span class="p">)</span></div>
+
+<span class="c1">## command line, explains the variables.</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Loginator 0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">LArWrapper</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Oregon State University.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+    </div>
+  </body>
+</html>

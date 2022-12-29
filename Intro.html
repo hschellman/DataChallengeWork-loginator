@@ -48,24 +48,34 @@
 <h1>What this package does<a class="headerlink" href="#what-this-package-does" title="Permalink to this heading">¶</a></h1>
 <blockquote>
 <div><ul class="simple">
-<li><p>Example scripts ( <a class="reference internal" href="tests.html"><span class="doc">Tests</span></a> ) for running LArSoft using either</p></li>
-</ul>
-<p><a class="reference external" href="https://cdcvs.fnal.gov/redmine/projects/sam-web-client/wiki">samweb</a> or
-the new <a class="reference external" href="https://data-dispatcher.readthedocs.io/en/latest/">Data Dispatcher (dd)</a> data delivery systems.</p>
-<ul class="simple">
+<li><p>Example scripts ( <a class="reference internal" href="tests.html"><span class="doc">Tests</span></a> ) for running LArSoft using either <a class="reference external" href="https://cdcvs.fnal.gov/redmine/projects/sam-web-client/wiki">samweb</a> or the new <a class="reference external" href="https://data-dispatcher.readthedocs.io/en/latest/">Data Dispatcher (dd)</a> data delivery systems.</p></li>
 <li><p>A log parser <a class="reference internal" href="generated/Loginator.html"><span class="doc">Loginator</span></a> that gathers information about the processing of an input file for monitoring purposes.</p></li>
 </ul>
 </div></blockquote>
-<p>Instead of running <a href="#id1"><span class="problematic" id="id2">`lar &lt;https://larsoft.org/important-concepts-in-larsoft/`_</span></a> directly,
-you run <span class="xref std std-doc">LArWrapper</span> with similar arguments.  It produces a summary dictionary that include information about CPU and memory use.
+<p>Instead of running <a class="reference external" href="https://larsoft.org/important-concepts-in-larsoft/">lar</a> directly,
+you run <a class="reference internal" href="generated/LArWrapper.html"><span class="doc">LArWrapper</span></a> with similar arguments.  It produces a summary dictionary that include information about CPU and memory use.
 This is useful both for profiling jobs before large processing campaigns and for monitoring overall resource use.</p>
 <p>The package has subdirectoris:</p>
-<p>——-  ———————————–
-python   the code itself
-batch    scripts needed for batch submission
-tests    sample scripts to exercise the code
-fcl      example fcl files
-——- ———————————–</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 85%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>python</p></td>
+<td><p>the code itself</p></td>
+</tr>
+<tr class="row-even"><td><p>batch</p></td>
+<td><p>scripts needed for batch submission</p></td>
+</tr>
+<tr class="row-odd"><td><p>tests</p></td>
+<td><p>sample scripts to exercise the code</p></td>
+</tr>
+<tr class="row-even"><td><p>fcl</p></td>
+<td><p>example fcl files</p></td>
+</tr>
+</tbody>
+</table>
 <p>and some utility scripts to setup.</p>
 </div>
 
