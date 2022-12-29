@@ -78,6 +78,7 @@ def main():
   theargs = vars(args)
   for a in theargs:
     print (a,theargs[a])
+
   if args.c == None:
     args.c = args.fcl
 
@@ -120,13 +121,20 @@ def main():
 
     #check size
     nfiles_in_dataset = len(query_files)
+
+    print ("got a list of ",nfiles_in_dataset," to run over")
     if nfiles_in_dataset == 0:
       sys.stderr.write("Ignoring launch request on empty metacat query")
       sys.stderr.write("Query: %s"%query)
       sys.exit(1)
 
     #make project in data dispatcher
-    proj_dict = dd_client.create_project(query_files, query=query)
+    print(" try to create a project")
+    try:
+        proj_dict = dd_client.create_project(query_files, query=query)
+    except:
+        print ("project creation failed, give up")
+        sys.exit(1)
     dd_proj_id = proj_dict['project_id']
     print('Project ID:', dd_proj_id)
 

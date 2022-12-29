@@ -4,7 +4,20 @@ DDInterface tests
 Interactive
 ***********
 
-Command line test of the DDInterface::
+
+Command line test of the DDInterface
+
+Example `tests/interactive_test.sh` starts a new data delivery project from a dataset and runs a short  lar job over 1 file
+
+  .. literalinclude:: ../../tests/interactive_test.sh
+     :language: bash
+
+Example `tests/rejoin.sh` rejoins an existing delivery project (projectID) and continues to process it
+
+.. literalinclude:: ../../tests/rejoin.sh
+   :language: bash
+
+::
 
   python -m DDInterface --help
   usage: DDInterface.py [-h] [--dataset DATASET] [--load_limit LOAD_LIMIT] [--namespace NAMESPACE]
@@ -45,3 +58,21 @@ Command line test of the DDInterface::
     -n N                  number of events total to process
     --nskip NSKIP         number of events to skip before starting
     --debug DEBUG         debug
+
+
+Batch
+*****
+
+Submit batch jobs that use the data Dispatcher
+
+* `tests/submit_test.sh` starts a project and then submits a single job
+
+  .. literalinclude:: ../../tests/submit_test.sh
+     :language: bash
+
+* `tests/submit_test.sh` start a project and then submits multiple jobs that grab files from that project
+
+   .. literalinclude:: ../../tests/submit_test.sh
+        :language: bash
+
+* `tarme.sh` is a utility script that make a loginator.tar file that gets sent to the batch job.  It appears in `${CONDOR_DIR_INPUT}` on the remote node.
