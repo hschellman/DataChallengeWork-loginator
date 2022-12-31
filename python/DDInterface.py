@@ -7,6 +7,8 @@ import datetime
 import requests
 import submit_dd_jobs
 
+RETRIES=3
+
 ''' Data Dispatcher interface
 Mainly written by Jacob Calcutt, 2022
 Mods for logging outputs by H. Schellman, 2022
@@ -37,7 +39,7 @@ def makedid(namespace,name):
 def call_and_retry(func):
   def inner1(*args, **kwargs):
     nretries = 0
-    while nretries < 5:
+    while nretries < RETRIES:
       try:
         print("call_and_retry",datetime.datetime.now())
         func(*args, **kwargs)
@@ -47,15 +49,16 @@ def call_and_retry(func):
         print(f'Will wait {args[0].retry_time} seconds and try again')
         time.sleep(args[0].retry_time)
         nretries += 1
-    if nretries > 4:
-      print("call_and_retry",'Too many retries')
+      print("try #", nretries)
+    if nretries > RETRIES:
+      print("call_and_retry",'Too many retries',nretries)
       sys.exit(1)
   return inner1
 
 def call_and_retry_return(func):
   def inner1(*args, **kwargs):
     nretries = 0
-    while nretries < 5:
+    while nretries < RETRIES:
       try:
         print("call_and_retry_return",datetime.datetime.now())
         result = func(*args, **kwargs)
@@ -65,8 +68,9 @@ def call_and_retry_return(func):
         print(f'Will wait {args[0].retry_time} and try again')
         time.sleep(args[0].retry_time)
         nretries += 1
-    if nretries > 4:
-      print("call_and_retry_return",'Too many retries')
+      print("try #", nretries)
+    if nretries > RETRIES:
+      print("call_and_retry_return",'Too many retries',nretries)
       sys.exit(1)
     return result
   return inner1
@@ -77,7 +81,7 @@ class DDInterface:
   ''' Interface to the Data Dispatcher
   '''
   def __init__(self, debug=False, dataset=None, namespace=None, lar_limit=0, timeout=120, wait_time=60, wait_limit=5,\
-   appFamily=None, appName=None, appVersion=None, workflowMethod="dd"):
+   appFamily=None, appName=None, appVersion=None, dataTier=None, dataStream=None, workflowMethod="dd"):
     '''
     Main interface for the data Dispatcher
 
@@ -103,18 +107,18 @@ class DDInterface:
     :rtype: int
     '''
 
-    self.dataset = dataset
-    self.limit = 1#limit
-    self.namespace = namespace
-
-    ''' namespace is an extra qualifier used in tests - deprecated '''
-    if namespace == None:
-        self.query = '''files from %s limit %i'''%(self.dataset, self.limit)
-    else:
-        query_args = (self.dataset, self.namespace, self.limit)
-        self.query = '''files from %s where namespace="%s" limit %i'''%query_args  # this is not a good idea
+    # self.dataset = dataset
+    # self.limit = 1#limit
+    # self.namespace = namespace
+    #
+    # ''' namespace is an extra qualifier used in tests - deprecated '''
+    # if namespace == None:
+    #     self.query = '''files from %s limit %i'''%(self.dataset, self.limit)
+    # else:
+    #     query_args = (self.dataset, self.namespace, self.limit)
+    #     self.query = '''files from %s where namespace="%s" limit %i'''%query_args  # this is not a good idea
     self.debug = debug
-    if self.debug: print ("DDInterface: the query is:",self.query)
+    #if self.debug: print ("DDInterface: the query is:",self.query)
     self.worker_timeout = 3600*5
     self.lar_limit = lar_limit
     self.proj_id = -1
@@ -168,18 +172,18 @@ class DDInterface:
   def SetLarLimit(self, limit):
     self.lar_limit = limit
 
-  def CreateProject(self):
-    """
-    Start a data dispatcher project
-    """
-    query_files = mc_client.query(self.query)
-    proj_dict = self.dd_client.create_project(
-        query_files, query=self.query, worker_timeout=self.worker_timeout)
-    print("CreateProject",datetime.datetime.now())
-    self.proj_state = proj_dict['state']
-    self.proj_id = proj_dict['project_id']
-    self.proj_exists = True
-    #print(proj_dict)
+  # def CreateProject(self):
+  #   """
+  #   Start a data dispatcher project
+  #   """
+  #   query_files = mc_client.query(self.query)
+  #   proj_dict = self.dd_client.create_project(
+  #       query_files, query=self.query, worker_timeout=self.worker_timeout)
+  #   print("CreateProject",datetime.datetime.now())
+  #   self.proj_state = proj_dict['state']
+  #   self.proj_id = proj_dict['project_id']
+  #   self.proj_exists = True
+  #   #print(proj_dict)
 
   def PrintFiles(self):
     print('Printing files')
@@ -199,7 +203,7 @@ class DDInterface:
     else:
         site = None
     print ('looking for files near',site)
-    # want to add cpu_site=site
+    # want to add cpu_site
     self.next_output = self.dd_client.next_file(
         self.proj_id, timeout=self.dd_timeout,
         worker_id=os.environ['MYWORKERID'])
@@ -453,7 +457,10 @@ def driver(args):
                              appVersion=args.appVersion,
                              workflowMethod=args.workflowMethod,
                              namespace=args.namespace,
-                             dataset=args.dataset)
+                             dataset=args.dataset,
+                             debug=args.debug,
+                             dataTier=args.dataTier,
+                             dataStream=args.dataStream)
     dd_interface.Login(args.user)
     dd_interface.SetWorkerID()
     print(os.environ['MYWORKERID'])
@@ -474,7 +481,7 @@ if __name__ == '__main__':
     parser.add_argument('--dataset', default='schellma:run5141recentReco',type=str)
     parser.add_argument('--load_limit', default=1, type=int,help='number of files to give to lar')
     parser.add_argument('--namespace', default=None, type=str, help="optional namespace qualifier for dataset")
-    parser.add_argument('--query_limit', default=100)
+    parser.add_argument('--query_limit', default=10)
     parser.add_argument('--query_skip', default=10)
     parser.add_argument('--projectID', default=None, type=int, help="dd projectID, overrides dataset")
     parser.add_argument('--timeout', type=int, default=120)

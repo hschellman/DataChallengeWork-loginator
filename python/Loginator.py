@@ -48,6 +48,7 @@ class Loginator:
             sys.exit(1)
         self.logname = logname
         self.debug = debug
+        print ("Loginator debug:",self.debug)
         self.logfile = open(logname,'r')
         self.outobject ={}
         self.info = self.getsysinfo()
@@ -97,7 +98,7 @@ class Loginator:
             "namespace":None,
             "event_count":None
         }
-        
+
 
 
     def setDebug(self,debug=False):
@@ -322,7 +323,7 @@ class Loginator:
                 if namespace == None:
                     print (" could not set namespace for",f)
                     continue
-            if self.debug: print (f,namespace)
+            if self.debug: print ("get metadata for ", f,namespace)
             meta = mc_client.get_file(name=f,namespace=namespace)
             if self.debug: print ("metacat answer",f,namespace)
             if meta == None:

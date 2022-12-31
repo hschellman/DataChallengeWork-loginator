@@ -165,7 +165,7 @@ class LArWrapper:
 
 ## here we get some information about how things went from the log file and other sources
     def LArResults(self):
-
+        print("check debug for LarWrapper",self.debug)
         # get log info, match with replicas
         logparse = Loginator.Loginator(logname=self.oname,debug=self.debug)
         logparse.readme()  # get info from the logfile

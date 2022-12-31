@@ -21,12 +21,9 @@ Processing monitor derived from loginator
 LArSoft
 -------
 
-  https://larsoft.org/training/
+  `LArSoft documenation <https://larsoft.org/training>`_
 
-samweb
-______
+samweb monitor
+______________
 
   `samweb project monitor <https://samweb.fnal.gov:8483/station_monitor/dune/stations/dune/projects>`_
-
-:doc:`Notes`
-------------

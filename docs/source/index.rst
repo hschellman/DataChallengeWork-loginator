@@ -30,3 +30,5 @@ Contents
     Modules
     api
     related
+    sam2metacat
+    Notes
