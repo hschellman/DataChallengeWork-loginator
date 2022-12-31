@@ -23,6 +23,10 @@ LArSoft
 
   https://larsoft.org/training/
 
+samweb
+______
+
+  `samweb project monitor <https://samweb.fnal.gov:8483/station_monitor/dune/stations/dune/projects>`_
 
 :doc:`Notes`
 ------------
