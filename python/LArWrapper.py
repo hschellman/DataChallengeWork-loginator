@@ -167,7 +167,7 @@ class LArWrapper:
     def LArResults(self):
 
         # get log info, match with replicas
-        logparse = Loginator.Loginator(self.oname)
+        logparse = Loginator.Loginator(logname=self.oname,debug=self.debug)
         logparse.readme()  # get info from the logfile
 # build up some information
         info = {"application_family":self.appFamily,"application_name":self.appName, "application_version":self.appVersion,\

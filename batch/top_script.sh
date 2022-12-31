@@ -7,6 +7,7 @@ export METACAT_AUTH_SERVER_URL=https://metacat.fnal.gov:8143/auth/dune
 export METACAT_SERVER_URL=https://metacat.fnal.gov:9443/dune_meta_demo/app
 export BEGIN_TIME=`date  +"%d-%b-%Y %H:%M:%S %Z"`
 
+
 POSITIONAL_ARGS=()
 nskip=0
 output_rses=("DUNE_US_FNAL_DISK_STAGE")
@@ -184,7 +185,7 @@ python -m DDInterface \
 
 returncode=$?
 #echo "Return code: " $returncode >> ${logname}.out 2>>${logname}.err
-echo "Return code: " $returncode
+echo "DDInterface return code: " $returncode
 
 ls
 echo "look at outputs"
@@ -192,12 +193,14 @@ cat *.out
 
 echo "look at error"
 cat *.err
+echo " make output directories"
+export IFDH_DEBUG=0
 export SCRATCH_DIR=/pnfs/dune/scratch/users
 #setup ifdh
-export OUTDIR=${SCRATCH_DIR}/${USER}/ddtest/${PROJECTID}
-
+export OUTDIR=${SCRATCH_DIR}/${USER}/ddtest/${PROJECTID}/${PROCESS}
+ifdh mkdir_p ${SCRATCH_DIR}/${USER}/ddtest/${PROJECTID}
 ifdh mkdir_p ${OUTDIR}
-export IFDH_DEBUG=0
+
 #if [ $? -ne 0 &&- z "$IFDH_OPTION"]; then
 #    echo "Unable to read ${SCRATCH_DIR}/${USER}/ddtest make sure that you have created this directory and given it group write permission."
 #    exit 74

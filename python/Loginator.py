@@ -47,6 +47,7 @@ class Loginator:
             print ("no such file exists, quitting",logname)
             sys.exit(1)
         self.logname = logname
+        self.debug = debug
         self.logfile = open(logname,'r')
         self.outobject ={}
         self.info = self.getsysinfo()
@@ -96,7 +97,7 @@ class Loginator:
             "namespace":None,
             "event_count":None
         }
-        self.debug=debug
+        
 
 
     def setDebug(self,debug=False):

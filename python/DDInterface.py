@@ -191,11 +191,19 @@ class DDInterface:
     """
     Ask the project for a new file to process
     """
-
+    print ("ask for next file")
+    if "GLIDEIN_DUNESite" in os.environ:
+        site = os.getenv("GLIDEIN_DUNESite")
+    elif "HOSTNAME" in os.environ:
+        site = os.getenv("HOSTNAME")
+    else:
+        site = None
+    print ('looking for files near',site)
+    # want to add cpu_site=site
     self.next_output = self.dd_client.next_file(
         self.proj_id, timeout=self.dd_timeout,
         worker_id=os.environ['MYWORKERID'])
-    print("next_file ",datetime.datetime.now())
+    print("next_file ",self.next_output,datetime.datetime.now())
 
   @call_and_retry
   def file_done(self, did):
