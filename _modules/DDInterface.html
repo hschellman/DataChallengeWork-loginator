@@ -47,6 +47,8 @@
 <span class="kn">import</span> <span class="nn">requests</span>
 <span class="kn">import</span> <span class="nn">submit_dd_jobs</span>
 
+<span class="n">RETRIES</span><span class="o">=</span><span class="mi">3</span>
+
 <span class="sd">&#39;&#39;&#39; Data Dispatcher interface</span>
 <span class="sd">Mainly written by Jacob Calcutt, 2022</span>
 <span class="sd">Mods for logging outputs by H. Schellman, 2022</span>
@@ -77,7 +79,7 @@
 <span class="k">def</span> <span class="nf">call_and_retry</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
   <span class="k">def</span> <span class="nf">inner1</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="n">nretries</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">while</span> <span class="n">nretries</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+    <span class="k">while</span> <span class="n">nretries</span> <span class="o">&lt;</span> <span class="n">RETRIES</span><span class="p">:</span>
       <span class="k">try</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;call_and_retry&quot;</span><span class="p">,</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
         <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -87,15 +89,16 @@
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Will wait </span><span class="si">{</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">retry_time</span><span class="si">}</span><span class="s1"> seconds and try again&#39;</span><span class="p">)</span>
         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">retry_time</span><span class="p">)</span>
         <span class="n">nretries</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="k">if</span> <span class="n">nretries</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">:</span>
-      <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;call_and_retry&quot;</span><span class="p">,</span><span class="s1">&#39;Too many retries&#39;</span><span class="p">)</span>
+      <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;try #&quot;</span><span class="p">,</span> <span class="n">nretries</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nretries</span> <span class="o">&gt;</span> <span class="n">RETRIES</span><span class="p">:</span>
+      <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;call_and_retry&quot;</span><span class="p">,</span><span class="s1">&#39;Too many retries&#39;</span><span class="p">,</span><span class="n">nretries</span><span class="p">)</span>
       <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
   <span class="k">return</span> <span class="n">inner1</span>
 
 <span class="k">def</span> <span class="nf">call_and_retry_return</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
   <span class="k">def</span> <span class="nf">inner1</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="n">nretries</span> <span class="o">=</span> <span class="mi">0</span>
-    <span class="k">while</span> <span class="n">nretries</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>
+    <span class="k">while</span> <span class="n">nretries</span> <span class="o">&lt;</span> <span class="n">RETRIES</span><span class="p">:</span>
       <span class="k">try</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;call_and_retry_return&quot;</span><span class="p">,</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -105,8 +108,9 @@
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Will wait </span><span class="si">{</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">retry_time</span><span class="si">}</span><span class="s1"> and try again&#39;</span><span class="p">)</span>
         <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">retry_time</span><span class="p">)</span>
         <span class="n">nretries</span> <span class="o">+=</span> <span class="mi">1</span>
-    <span class="k">if</span> <span class="n">nretries</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">:</span>
-      <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;call_and_retry_return&quot;</span><span class="p">,</span><span class="s1">&#39;Too many retries&#39;</span><span class="p">)</span>
+      <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;try #&quot;</span><span class="p">,</span> <span class="n">nretries</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nretries</span> <span class="o">&gt;</span> <span class="n">RETRIES</span><span class="p">:</span>
+      <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;call_and_retry_return&quot;</span><span class="p">,</span><span class="s1">&#39;Too many retries&#39;</span><span class="p">,</span><span class="n">nretries</span><span class="p">)</span>
       <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">result</span>
   <span class="k">return</span> <span class="n">inner1</span>
@@ -117,7 +121,7 @@
   <span class="sd">&#39;&#39;&#39; Interface to the Data Dispatcher</span>
 <span class="sd">  &#39;&#39;&#39;</span>
   <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">namespace</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lar_limit</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">wait_time</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">wait_limit</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>\
-   <span class="n">appFamily</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">appName</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">appVersion</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">workflowMethod</span><span class="o">=</span><span class="s2">&quot;dd&quot;</span><span class="p">):</span>
+   <span class="n">appFamily</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">appName</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">appVersion</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dataTier</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dataStream</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">workflowMethod</span><span class="o">=</span><span class="s2">&quot;dd&quot;</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Main interface for the data Dispatcher</span>
 
@@ -143,18 +147,18 @@
 <span class="sd">    :rtype: int</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">limit</span> <span class="o">=</span> <span class="mi">1</span><span class="c1">#limit</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">namespace</span> <span class="o">=</span> <span class="n">namespace</span>
-
-    <span class="sd">&#39;&#39;&#39; namespace is an extra qualifier used in tests - deprecated &#39;&#39;&#39;</span>
-    <span class="k">if</span> <span class="n">namespace</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;files from </span><span class="si">%s</span><span class="s1"> limit </span><span class="si">%i</span><span class="s1">&#39;&#39;&#39;</span><span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">query_args</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">namespace</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">limit</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;&#39;&#39;files from </span><span class="si">%s</span><span class="s1"> where namespace=&quot;</span><span class="si">%s</span><span class="s1">&quot; limit </span><span class="si">%i</span><span class="s1">&#39;&#39;&#39;</span><span class="o">%</span><span class="n">query_args</span>  <span class="c1"># this is not a good idea</span>
+    <span class="c1"># self.dataset = dataset</span>
+    <span class="c1"># self.limit = 1#limit</span>
+    <span class="c1"># self.namespace = namespace</span>
+    <span class="c1">#</span>
+    <span class="c1"># &#39;&#39;&#39; namespace is an extra qualifier used in tests - deprecated &#39;&#39;&#39;</span>
+    <span class="c1"># if namespace == None:</span>
+    <span class="c1">#     self.query = &#39;&#39;&#39;files from %s limit %i&#39;&#39;&#39;%(self.dataset, self.limit)</span>
+    <span class="c1"># else:</span>
+    <span class="c1">#     query_args = (self.dataset, self.namespace, self.limit)</span>
+    <span class="c1">#     self.query = &#39;&#39;&#39;files from %s where namespace=&quot;%s&quot; limit %i&#39;&#39;&#39;%query_args  # this is not a good idea</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="n">debug</span>
-    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span> <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;DDInterface: the query is:&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">)</span>
+    <span class="c1">#if self.debug: print (&quot;DDInterface: the query is:&quot;,self.query)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">worker_timeout</span> <span class="o">=</span> <span class="mi">3600</span><span class="o">*</span><span class="mi">5</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">lar_limit</span> <span class="o">=</span> <span class="n">lar_limit</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">proj_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
@@ -208,18 +212,18 @@
   <span class="k">def</span> <span class="nf">SetLarLimit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">limit</span><span class="p">):</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">lar_limit</span> <span class="o">=</span> <span class="n">limit</span>
 
-  <span class="k">def</span> <span class="nf">CreateProject</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Start a data dispatcher project</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">query_files</span> <span class="o">=</span> <span class="n">mc_client</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">)</span>
-    <span class="n">proj_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dd_client</span><span class="o">.</span><span class="n">create_project</span><span class="p">(</span>
-        <span class="n">query_files</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">,</span> <span class="n">worker_timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">worker_timeout</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;CreateProject&quot;</span><span class="p">,</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">proj_state</span> <span class="o">=</span> <span class="n">proj_dict</span><span class="p">[</span><span class="s1">&#39;state&#39;</span><span class="p">]</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">proj_id</span> <span class="o">=</span> <span class="n">proj_dict</span><span class="p">[</span><span class="s1">&#39;project_id&#39;</span><span class="p">]</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">proj_exists</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="c1">#print(proj_dict)</span>
+  <span class="c1"># def CreateProject(self):</span>
+  <span class="c1">#   &quot;&quot;&quot;</span>
+  <span class="c1">#   Start a data dispatcher project</span>
+  <span class="c1">#   &quot;&quot;&quot;</span>
+  <span class="c1">#   query_files = mc_client.query(self.query)</span>
+  <span class="c1">#   proj_dict = self.dd_client.create_project(</span>
+  <span class="c1">#       query_files, query=self.query, worker_timeout=self.worker_timeout)</span>
+  <span class="c1">#   print(&quot;CreateProject&quot;,datetime.datetime.now())</span>
+  <span class="c1">#   self.proj_state = proj_dict[&#39;state&#39;]</span>
+  <span class="c1">#   self.proj_id = proj_dict[&#39;project_id&#39;]</span>
+  <span class="c1">#   self.proj_exists = True</span>
+  <span class="c1">#   #print(proj_dict)</span>
 
   <span class="k">def</span> <span class="nf">PrintFiles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Printing files&#39;</span><span class="p">)</span>
@@ -239,7 +243,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">site</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="nb">print</span> <span class="p">(</span><span class="s1">&#39;looking for files near&#39;</span><span class="p">,</span><span class="n">site</span><span class="p">)</span>
-    <span class="c1"># want to add cpu_site=site</span>
+    <span class="c1"># want to add cpu_site</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">next_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dd_client</span><span class="o">.</span><span class="n">next_file</span><span class="p">(</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">proj_id</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dd_timeout</span><span class="p">,</span>
         <span class="n">worker_id</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;MYWORKERID&#39;</span><span class="p">])</span>
@@ -493,7 +497,10 @@
                              <span class="n">appVersion</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">appVersion</span><span class="p">,</span>
                              <span class="n">workflowMethod</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">workflowMethod</span><span class="p">,</span>
                              <span class="n">namespace</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">namespace</span><span class="p">,</span>
-                             <span class="n">dataset</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+                             <span class="n">dataset</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span>
+                             <span class="n">debug</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">debug</span><span class="p">,</span>
+                             <span class="n">dataTier</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">dataTier</span><span class="p">,</span>
+                             <span class="n">dataStream</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">dataStream</span><span class="p">)</span>
     <span class="n">dd_interface</span><span class="o">.</span><span class="n">Login</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
     <span class="n">dd_interface</span><span class="o">.</span><span class="n">SetWorkerID</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;MYWORKERID&#39;</span><span class="p">])</span>
@@ -514,7 +521,7 @@
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--dataset&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;schellma:run5141recentReco&#39;</span><span class="p">,</span><span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--load_limit&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span><span class="n">help</span><span class="o">=</span><span class="s1">&#39;number of files to give to lar&#39;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--namespace&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;optional namespace qualifier for dataset&quot;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--query_limit&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--query_limit&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--query_skip&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--projectID&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s2">&quot;dd projectID, overrides dataset&quot;</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--timeout&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">120</span><span class="p">)</span>

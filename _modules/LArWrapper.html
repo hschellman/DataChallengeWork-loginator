@@ -205,7 +205,7 @@
 
 <span class="c1">## here we get some information about how things went from the log file and other sources</span>
     <span class="k">def</span> <span class="nf">LArResults</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;check debug for LarWrapper&quot;</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">)</span>
         <span class="c1"># get log info, match with replicas</span>
         <span class="n">logparse</span> <span class="o">=</span> <span class="n">Loginator</span><span class="o">.</span><span class="n">Loginator</span><span class="p">(</span><span class="n">logname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">oname</span><span class="p">,</span><span class="n">debug</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">)</span>
         <span class="n">logparse</span><span class="o">.</span><span class="n">readme</span><span class="p">()</span>  <span class="c1"># get info from the logfile</span>

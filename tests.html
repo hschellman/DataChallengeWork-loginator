@@ -56,7 +56,7 @@
 <blockquote>
 <div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># run an interactive test HMS 12-2-2022</span>
 <span class="nb">export</span> <span class="nv">BEGIN_TIME</span><span class="o">=</span><span class="sb">`</span>date +<span class="s2">&quot;%d-%b-%Y %H:%M:%S %Z&quot;</span><span class="sb">`</span>
-python -m DDInterface --dataset schellma:run5141Prod2Reco --query_limit <span class="m">10</span> --load_limit <span class="m">1</span> -c fcl/test.fcl --user <span class="nv">$USER</span> --appFamily<span class="o">=</span>protoduneana --appName<span class="o">=</span><span class="nb">test</span> --appVersion<span class="o">=</span><span class="nv">$PROTODUNEANA_VERSION</span>  -n <span class="m">20</span>
+python -m DDInterface --debug<span class="o">=</span>True --dataset schellma:run5141recentReco --query_limit <span class="m">10</span> --load_limit <span class="m">1</span> -c fcl/test.fcl --user <span class="nv">$USER</span> --appFamily<span class="o">=</span>protoduneana --appName<span class="o">=</span><span class="nb">test</span> --appVersion<span class="o">=</span><span class="nv">$PROTODUNEANA_VERSION</span>  -n <span class="m">2</span>
 <span class="c1"># this does a minimal test reading n=20 events from load_limit=1 files</span>
 </pre></div>
 </div>

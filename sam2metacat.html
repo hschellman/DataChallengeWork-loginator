@@ -1,0 +1,283 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sam to Metacat Conversion guide &#8212; Loginator 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nature.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Notes on sphinx" href="Notes.html" />
+    <link rel="prev" title="Related documentation" href="related.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Notes.html" title="Notes on sphinx"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="related.html" title="Related documentation"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Loginator 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Sam to Metacat Conversion guide</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="sam-to-metacat-conversion-guide">
+<h1>Sam to Metacat Conversion guide<a class="headerlink" href="#sam-to-metacat-conversion-guide" title="Permalink to this heading">¶</a></h1>
+<blockquote>
+<div><p>This document includes examples of <cite>sam</cite> queries gathered from DUNE Dataset definitions and their <cite>metacat</cite> translations</p>
+</div></blockquote>
+<div class="section" id="get-metacat-started">
+<h2>Get metacat started<a class="headerlink" href="#get-metacat-started" title="Permalink to this heading">¶</a></h2>
+<p>First find the documentation:</p>
+<p><a class="reference external" href="https://metacat.readthedocs.io/en/latest/index.html">https://metacat.readthedocs.io/en/latest/index.html</a></p>
+<p>metacat is a <cite>ups</cite> product so you can get it by</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span> /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
+setup python v3_9_2  <span class="c1"># this avoids system python which may be very old</span>
+setup metacat
+</pre></div>
+</div>
+<p>but you can also do a local install using:</p>
+<p><a class="reference external" href="https://metacat.readthedocs.io/en/latest/ui.html#installation">https://metacat.readthedocs.io/en/latest/ui.html#installation</a></p>
+<p>Make certain you can point to the metacat server:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">METACAT_AUTH_SERVER_URL</span><span class="o">=</span>https://metacat.fnal.gov:8143/auth/dune
+<span class="nb">export</span> <span class="nv">METACAT_SERVER_URL</span><span class="o">=</span>https://metacat.fnal.gov:9443/dune_meta_demo/app
+</pre></div>
+</div>
+<p>Then authenticate to metacat:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat auth login -m password <span class="nv">$USER</span>
+Password:
+User:    schellma
+Expires: Thu Oct <span class="m">13</span> <span class="m">16</span>:27:29 <span class="m">2022</span>
+</pre></div>
+</div>
+<p><em>Note: you can also authenticate via other methods, for example</em></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">X509_USER_PROXY</span><span class="o">=</span>/tmp/x509up_u1327
+<span class="nb">export</span> <span class="nv">X509_USER_KEY</span><span class="o">=</span><span class="nv">$X509_USER_PROXY</span>
+metacat auth login -m x509 <span class="nv">$USER</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="example-get-the-raw-data-from-given-protodune-sp-detector-runs">
+<h2>Example: Get the raw data from given protodune-sp detector runs<a class="headerlink" href="#example-get-the-raw-data-from-given-protodune-sp-detector-runs" title="Permalink to this heading">¶</a></h2>
+<ul>
+<li><p>samweb</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>samweb list-files <span class="s2">&quot;file_type detector and run_type &#39;protodune-sp&#39;\</span>
+<span class="s2"> and data_tier raw and data_stream physics and run_number 5141,5143&quot;</span>
+</pre></div>
+</div>
+<p>add <cite>–summary</cite> if you wish to know how many files there are.</p>
+</li>
+<li><p>metacat</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat query <span class="s2">&quot;files from dune:all where core.file_type=detector \</span>
+<span class="s2"> and core.run_type=&#39;protodune-sp&#39; and core.data_tier=raw \</span>
+<span class="s2"> and core.data_stream=physics and core.runs[any] in (5141,5413)&quot;</span>
+</pre></div>
+</div>
+</div></blockquote>
+<p>add <cite>–summary</cite> after query if you want just the # of files</p>
+<p><em>Notes:</em></p>
+<ul class="simple">
+<li><p><em>many of the metadata values are now in categories like `core`</em></p></li>
+<li><p><em>things run faster if you ask for files from a known dataset like `dune:all`</em></p></li>
+<li><p><em>core.runs[any] means check any of the runs associated with the file for being 5141</em></p></li>
+<li><p><em>core.runs[any] in (5141, 5142, 5147) - any of these 3 runs</em></p></li>
+<li><p><em>core.runs[any] = 5141- single run, equivalent: 5141 in core.runs</em></p></li>
+<li><p><em>you can ask for multiple runs by using the `in (X,Y)` syntax</em></p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="example-save-a-dataset-or-definition-query">
+<h2>Example: Save a dataset or definition query<a class="headerlink" href="#example-save-a-dataset-or-definition-query" title="Permalink to this heading">¶</a></h2>
+<p>If you are interested in everything physics from <cite>protodune-sp</cite>, you might want to save a generic dataset or query which you can then reuse in further filtered queries.  Then as you narrow thing down you can build additional datasets.</p>
+<ul>
+<li><p><em>samweb</em></p>
+<p>in sam you save a definition, which is the query</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>samweb create-definition schellma-protodune-sp-physics-generic <span class="se">\</span>
+<span class="s2">&quot;file_type detector and run_type &#39;protodune-sp&#39; and data_stream physics&quot;</span> <span class="sb">`</span>
+</pre></div>
+</div>
+<p>You can then ask for:</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>samweb list-files <span class="s2">&quot;defname:schellma-protodune-sp-physics-generic \</span>
+<span class="s2"> and data_tier raw and run_number 5141&quot;</span> --summary
+</pre></div>
+</div>
+</div></blockquote>
+<p><em>Note: a sam definition is a query, not a list of files and can change, for example if more data are added.  You need to make a `snapshot` to make a list that does not change.</em></p>
+<p><em>Another note: sam also prepends the user name to the definition so that you can’t mess up official queries.  This is handled in metacat by the introduction of namespaces.</em></p>
+</li>
+<li><p>metacat</p>
+<p>To run a MQL query and create a new dataset with the query results:</p>
+<blockquote>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat dataset create -f <span class="s2">&quot;files from dune:all where \</span>
+<span class="s2">...&quot;</span> &lt;dataset_namespace&gt;:&lt;dataset_name&gt;
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat dataset create -f @file_with_mql_query.txt <span class="se">\</span>
+&lt;dataset_namespace&gt;:&lt;dataset_name&gt; &lt;dataset description&gt;
+</pre></div>
+</div>
+</div></blockquote>
+<p>To run a query and add matching files to an existing dataset:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat dataset add-files -q <span class="s2">&quot;files from dune:all where ...&quot;</span> &lt;dataset_namespace&gt;:&lt;dataset_name&gt;
+
+metacat dataset add-files -q @file_with_mql_query.txt &lt;dataset_namespace&gt;:&lt;dataset_name&gt;
+</pre></div>
+</div>
+<p>check it by querying the files in the dataset</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat query -s <span class="s2">&quot;files from schellma:protodune-sp-physics-generic&quot;</span>
+
+metacat dataset show schellma:protodune-sp-physics-generic
+
+children                 :
+created_timestamp        : <span class="m">2022</span>-10-08 <span class="m">11</span>:41:54
+creator                  : schellma
+description              : files from dune:all where core.file_type<span class="o">=</span>detector and core.run_type<span class="o">=</span><span class="s1">&#39;protodune-sp&#39;</span> and core.data_stream<span class="o">=</span>physics
+file_count               : <span class="m">772631</span>
+file_meta_requirements   : <span class="o">{}</span>
+frozen                   : False
+metadata                 : <span class="o">{}</span>
+monotonic                : False
+name                     : protodune-sp-physics-generic
+namespace                : schellma
+parents                  :
+</pre></div>
+</div>
+<p>You can then ask for the subset from a particular data tier and run number.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat query <span class="s2">&quot;files from schellma:protodune-sp-physics-generic \</span>
+<span class="s2">where core.runs[all]=5141 and core.data_tier=raw&quot;</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+<div class="section" id="find-only-the-files-not-processed-with-a-version-of-code">
+<h2>Find only the files not processed with a version of code<a class="headerlink" href="#find-only-the-files-not-processed-with-a-version-of-code" title="Permalink to this heading">¶</a></h2>
+<ul>
+<li><p>samweb</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>samweb list-files <span class="s2">&quot;defname:schellma-protodune-sp-physics-generic \</span>
+<span class="s2"> and data_tier raw and run_number 5141 minus \</span>
+<span class="s2"> isparentof:(defname:schellma-protodune-sp-physics-generic\</span>
+<span class="s2">  and data_tier &#39;full-reconstructed&#39;  and run_number 5141 and version v08_27_% )&quot;</span> --summary
+
+File count: <span class="m">12</span>
+Total size: <span class="m">95354212618</span>
+Event count:        <span class="m">1241</span>
+</pre></div>
+</div>
+</li>
+<li><p>metacat</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat query -s <span class="s2">&quot;files from schellma:protodune-sp-physics-generic \</span>
+<span class="s2">where core.data_tier=raw and 5141 in core.runs -  parents(files \</span>
+<span class="s2">from schellma:protodune-sp-physics-generic where 5141 in core.runs \</span>
+<span class="s2">and core.data_tier=&#39;full-reconstructed&#39; and core.application.version~&#39;v08_27_.*&#39;)&quot;</span>
+
+<span class="m">12</span> files
+</pre></div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Sam to Metacat Conversion guide</a><ul>
+<li><a class="reference internal" href="#get-metacat-started">Get metacat started</a></li>
+<li><a class="reference internal" href="#example-get-the-raw-data-from-given-protodune-sp-detector-runs">Example: Get the raw data from given protodune-sp detector runs</a></li>
+<li><a class="reference internal" href="#example-save-a-dataset-or-definition-query">Example: Save a dataset or definition query</a></li>
+<li><a class="reference internal" href="#find-only-the-files-not-processed-with-a-version-of-code">Find only the files not processed with a version of code</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="related.html"
+                          title="previous chapter">Related documentation</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="Notes.html"
+                          title="next chapter">Notes on sphinx</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/sam2metacat.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="Notes.html" title="Notes on sphinx"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="related.html" title="Related documentation"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Loginator 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Sam to Metacat Conversion guide</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2022, Oregon State University.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0.
+    </div>
+  </body>
+</html>
