@@ -52,6 +52,7 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.viewcode',
+    'sphinx.ext.inheritance_diagram'
     #'sphinxcontrib.programoutput',  # not available to github
 ]
 

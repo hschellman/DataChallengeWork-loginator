@@ -21,7 +21,7 @@ if not "HOST" in os.environ or not "apple" in os.environ["HOST"]:
     from data_dispatcher.api import APIError
 
 import LArWrapper
-import Loginator
+#import Loginator
 
 
 ''' utility codes '''
