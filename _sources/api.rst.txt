@@ -11,3 +11,5 @@ API
         DDInterface
 
         Loginator
+
+        submit_dd_jobs

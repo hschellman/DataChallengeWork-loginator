@@ -51,17 +51,17 @@
 <p>To use Loginator, first install this package, and <a class="reference external" href="https://metacat.readthedocs.io/en/latest/">metacat</a> and <a class="reference external" href="https://data-dispatcher.readthedocs.io/en/latest/">data dispatcher</a> from github (or ups).</p>
 <p>Then run <cite>setup_hms</cite> after modifying for your own user.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="c1"># setup for running data dispatcher tests</span>
-<span class="linenos"> 2</span><span class="nb">export</span> <span class="nv">DATA_DISPATCHER_URL</span><span class="o">=</span>https://metacat.fnal.gov:9443/dune/dd/data
-<span class="linenos"> 3</span><span class="nb">export</span> <span class="nv">DATA_DISPATCHER_AUTH_URL</span><span class="o">=</span>https://metacat.fnal.gov:8143/auth/dune
-<span class="linenos"> 4</span><span class="nb">export</span> <span class="nv">METACAT_SERVER_URL</span><span class="o">=</span>https://metacat.fnal.gov:9443/dune_meta_demo/app
-<span class="linenos"> 5</span><span class="nb">export</span> <span class="nv">METACAT_AUTH_SERVER_URL</span><span class="o">=</span>https://metacat.fnal.gov:8143/auth/dune
-<span class="linenos"> 6</span><span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="nv">$HOME</span>/.local/bin/:<span class="nv">$PATH</span>
-<span class="linenos"> 7</span><span class="nb">export</span> <span class="nv">HERE</span><span class="o">=</span><span class="nv">$PWD</span>
-<span class="linenos"> 8</span><span class="nb">export</span> <span class="nv">PYTHONPATH</span><span class="o">=</span><span class="nv">$HERE</span>/python:<span class="si">${</span><span class="nv">PYTHONPATH</span><span class="si">}</span>
+<span class="linenos"> 2</span><span class="nb">export</span><span class="w"> </span><span class="nv">DATA_DISPATCHER_URL</span><span class="o">=</span>https://metacat.fnal.gov:9443/dune/dd/data
+<span class="linenos"> 3</span><span class="nb">export</span><span class="w"> </span><span class="nv">DATA_DISPATCHER_AUTH_URL</span><span class="o">=</span>https://metacat.fnal.gov:8143/auth/dune
+<span class="linenos"> 4</span><span class="nb">export</span><span class="w"> </span><span class="nv">METACAT_SERVER_URL</span><span class="o">=</span>https://metacat.fnal.gov:9443/dune_meta_demo/app
+<span class="linenos"> 5</span><span class="nb">export</span><span class="w"> </span><span class="nv">METACAT_AUTH_SERVER_URL</span><span class="o">=</span>https://metacat.fnal.gov:8143/auth/dune
+<span class="linenos"> 6</span><span class="nb">export</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="nv">$HOME</span>/.local/bin/:<span class="nv">$PATH</span>
+<span class="linenos"> 7</span><span class="nb">export</span><span class="w"> </span><span class="nv">HERE</span><span class="o">=</span><span class="nv">$PWD</span>
+<span class="linenos"> 8</span><span class="nb">export</span><span class="w"> </span><span class="nv">PYTHONPATH</span><span class="o">=</span><span class="nv">$HERE</span>/python:<span class="si">${</span><span class="nv">PYTHONPATH</span><span class="si">}</span>
 <span class="linenos"> 9</span>kx509
-<span class="linenos">10</span>voms-proxy-init -rfc -noregen -voms<span class="o">=</span>dune:/dune/Role<span class="o">=</span>Analysis -valid <span class="m">120</span>:00
+<span class="linenos">10</span>voms-proxy-init<span class="w"> </span>-rfc<span class="w"> </span>-noregen<span class="w"> </span>-voms<span class="o">=</span>dune:/dune/Role<span class="o">=</span>Analysis<span class="w"> </span>-valid<span class="w"> </span><span class="m">120</span>:00
 <span class="linenos">11</span>voms-proxy-info
-<span class="linenos">12</span><span class="nb">export</span> <span class="nv">X509_USER_PROXY</span><span class="o">=</span>/tmp/x509up_u1327  <span class="c1"># this is specific to me</span>
+<span class="linenos">12</span><span class="nb">export</span><span class="w"> </span><span class="nv">X509_USER_PROXY</span><span class="o">=</span>/tmp/x509up_u1327<span class="w">  </span><span class="c1"># this is specific to me</span>
 </pre></div>
 </div>
 </div>

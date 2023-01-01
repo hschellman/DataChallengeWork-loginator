@@ -70,13 +70,13 @@
 <span class="c1">##  Loginator class should not care what access method you are using</span>
 
 <div class="viewcode-block" id="Loginator"><a class="viewcode-back" href="../Modules.html#Loginator.Loginator">[docs]</a><span class="k">class</span> <span class="nc">Loginator</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Art Logfile parser that assembles a file by file json record for use with elasticsearch</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 <span class="c1">## initialization, requires an Art logfile to parse and creates a template json file</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">logname</span><span class="p">,</span><span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        :param logname: name of the art logfile to read</span>
 <span class="sd">        :type logname: str</span>
 <span class="sd">        :param debug: turn on debug printout</span>
@@ -153,7 +153,7 @@
 
 <span class="c1">## look at a line of text and find the first tag from self.tags in the line</span>
     <span class="k">def</span> <span class="nf">findme</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">line</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Check to see if one of the tags is in a given line of the log</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tags</span><span class="p">:</span>
@@ -173,7 +173,7 @@
 
 
     <span class="k">def</span> <span class="nf">getsysinfo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; get system info for the running process, shared with all files processed &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; get system info for the running process, shared with all files processed &quot;&quot;&quot;</span>
         <span class="n">info</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="c1"># get a bunch of system thingies.</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;GRID_USER&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
@@ -188,11 +188,11 @@
         <span class="k">return</span> <span class="n">info</span>
 
     <span class="k">def</span> <span class="nf">addsysinfo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;## add system info to the record&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;## add system info to the record&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">addinfo</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">getsysinfo</span><span class="p">())</span>
 
     <span class="k">def</span> <span class="nf">readme</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; read in the log file and parse it</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; read in the log file and parse it</span>
 <span class="sd">            lines with specific tags get processes while others are skipped</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">object</span> <span class="o">=</span> <span class="p">{}</span>
@@ -309,7 +309,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">outobject</span><span class="o">=</span><span class="nb">object</span>
 
     <span class="k">def</span> <span class="nf">addinfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">info</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;  add information from a dictionary to the record&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;  add information from a dictionary to the record&quot;</span>
 <span class="sd">        :param info: Dictionary with list of items to add the the output record</span>
 <span class="sd">        :type info: {}</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -324,7 +324,7 @@
 
 
     <span class="k">def</span> <span class="nf">addsaminfo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39; add input file information from sam to the record</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39; add input file information from sam to the record</span>
 <span class="sd">            need to check that sam is actually available</span>
 <span class="sd">        &#39;&#39;&#39;</span>
         <span class="k">if</span> <span class="s2">&quot;SAM_EXPERIMENT&quot;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
@@ -348,7 +348,7 @@
 
 
     <span class="k">def</span> <span class="nf">addmetacatinfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">defaultNamespace</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;add file information from metacat to the record</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;add file information from metacat to the record</span>
 <span class="sd">        the defaultNamespace argument is just there for testing</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -383,7 +383,7 @@
 
 
     <span class="k">def</span> <span class="nf">addreplicainfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">replicas</span><span class="p">,</span><span class="n">test</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        get some details from the data dispatcher on file locations</span>
 <span class="sd">        :param replicas: dictionary with lists of replicas for each file from the dd</span>
 <span class="sd">        :type replicas: {}</span>
@@ -413,7 +413,7 @@
         <span class="k">return</span> <span class="n">notfound</span>
 
     <span class="k">def</span> <span class="nf">writeme</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; dump info to json file &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; dump info to json file &quot;&quot;&quot;</span>
         <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">thing</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">outobject</span><span class="p">:</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">debug</span><span class="p">:</span> <span class="nb">print</span> <span class="p">(</span><span class="n">thing</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">outobject</span><span class="p">[</span><span class="n">thing</span><span class="p">])</span>
@@ -445,7 +445,7 @@
 
 
 <span class="k">def</span> <span class="nf">test</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot; test the Loginator &quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; test the Loginator &quot;&quot;&quot;</span>
 
     <span class="n">parse</span> <span class="o">=</span> <span class="n">Loginator</span><span class="p">(</span><span class="n">logname</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span><span class="n">debug</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 

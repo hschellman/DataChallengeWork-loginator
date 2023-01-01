@@ -118,11 +118,11 @@
 
 
 <div class="viewcode-block" id="DDInterface"><a class="viewcode-back" href="../Modules.html#DDInterface.DDInterface">[docs]</a><span class="k">class</span> <span class="nc">DDInterface</span><span class="p">:</span>
-  <span class="sd">&#39;&#39;&#39; Interface to the Data Dispatcher</span>
+<span class="w">  </span><span class="sd">&#39;&#39;&#39; Interface to the Data Dispatcher</span>
 <span class="sd">  &#39;&#39;&#39;</span>
   <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">namespace</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lar_limit</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">120</span><span class="p">,</span> <span class="n">wait_time</span><span class="o">=</span><span class="mi">60</span><span class="p">,</span> <span class="n">wait_limit</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>\
    <span class="n">appFamily</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">appName</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">appVersion</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dataTier</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dataStream</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">workflowMethod</span><span class="o">=</span><span class="s2">&quot;dd&quot;</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Main interface for the data Dispatcher</span>
 
 <span class="sd">    :param debug: add printout and send stdout to console instead of a files</span>
@@ -199,7 +199,7 @@
   <span class="nd">@call_and_retry</span>
   <span class="k">def</span> <span class="nf">Login</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get credentials for DD and metacat</span>
 <span class="sd">    :param username: username (normally fnal service account)</span>
 <span class="sd">    :type username: str</span>
@@ -232,7 +232,7 @@
 
   <span class="nd">@call_and_retry</span>
   <span class="k">def</span> <span class="nf">next_file</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Ask the project for a new file to process</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;ask for next file&quot;</span><span class="p">)</span>
@@ -252,7 +252,7 @@
   <span class="nd">@call_and_retry</span>
   <span class="k">def</span> <span class="nf">file_done</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">did</span><span class="p">):</span>
 
-      <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">      </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">      Mark file as done</span>
 <span class="sd">      :param did: did &lt;namespace&gt;:&lt;filename&gt; of finished file</span>
 <span class="sd">      :type did: str</span>
@@ -410,7 +410,7 @@
       <span class="k">else</span><span class="p">:</span>
         <span class="n">lines</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;{&quot;did&quot;:&quot;</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">&quot;}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">f</span><span class="p">[</span><span class="s1">&#39;namespace&#39;</span><span class="p">],</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]))</span>
 
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;loaded_files.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_loaded_files.txt&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;MYWORKERID&quot;</span><span class="p">)),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
       <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span>
 
   <span class="k">def</span> <span class="nf">SetWorkerID</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -481,7 +481,7 @@
 <span class="sd">&quot;&quot;&quot; driver test &quot;&quot;&quot;</span>
 
 <span class="k">def</span> <span class="nf">driver</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; driver for DDInterface</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; driver for DDInterface</span>
 <span class="sd">    .. param: args (parsed arguments)</span>
 <span class="sd">    .. type: []</span>
 <span class="sd">    .. return: lar return code</span>
@@ -513,7 +513,7 @@
     <span class="k">return</span> <span class="n">retcode</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
-    <span class="sd">&#39;&#39;&#39; run_lar</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39; run_lar</span>
 <span class="sd">    .. cmdoption:: --dataset &lt;dataset&gt;</span>
 <span class="sd">    &#39;&#39;&#39;</span>
     <span class="n">parser</span> <span class="o">=</span> <span class="n">ap</span><span class="p">()</span>

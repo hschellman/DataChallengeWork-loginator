@@ -111,7 +111,7 @@
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">LArWrapper.</span></span><span class="sig-name descname"><span class="pre">LArWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fcl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">o</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'temp*.root'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nskip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">appFamily</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">appName</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">appVersion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projectID</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sam_web_uri</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processID</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataTier</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sam-user'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataStream</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'test'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deliveryMethod</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">workflowMethod</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">formatString</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'runLar_%s_%s_%%tc_%s_%s_%s.root'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processHASH</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replicas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/LArWrapper.html#LArWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#LArWrapper.LArWrapper" title="Permalink to this definition">¶</a></dt>
 <dd><p>LArWrapper - generic wrapper for LArSoft that works with samweb and dd</p>
 <p>Many of the options are the same as those for lar</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">$lar</span> -h <span class="c1">#for more examples</span>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nv">$lar</span><span class="w"> </span>-h<span class="w"> </span><span class="c1">#for more examples</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -161,6 +161,19 @@
 </dd></dl>
 
 </div>
+<div class="section" id="submit-dd-jobs">
+<h2>submit_dd_jobs<a class="headerlink" href="#submit-dd-jobs" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="submit_dd_jobs.create_project">
+<span class="sig-prename descclassname"><span class="pre">submit_dd_jobs.</span></span><span class="sig-name descname"><span class="pre">create_project</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">namespace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_skip</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/submit_dd_jobs.html#create_project"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#submit_dd_jobs.create_project" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="submit_dd_jobs.main">
+<span class="sig-prename descclassname"><span class="pre">submit_dd_jobs.</span></span><span class="sig-name descname"><span class="pre">main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/submit_dd_jobs.html#main"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#submit_dd_jobs.main" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
 </div>
 
 
@@ -188,6 +201,11 @@
 </li>
 <li><a class="reference internal" href="#loginator">Loginator</a><ul>
 <li><a class="reference internal" href="#Loginator.Loginator"><code class="docutils literal notranslate"><span class="pre">Loginator</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#submit-dd-jobs">submit_dd_jobs</a><ul>
+<li><a class="reference internal" href="#submit_dd_jobs.create_project"><code class="docutils literal notranslate"><span class="pre">create_project()</span></code></a></li>
+<li><a class="reference internal" href="#submit_dd_jobs.main"><code class="docutils literal notranslate"><span class="pre">main()</span></code></a></li>
 </ul>
 </li>
 </ul>

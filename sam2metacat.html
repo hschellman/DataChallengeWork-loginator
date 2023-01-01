@@ -54,29 +54,29 @@
 <p>First find the documentation:</p>
 <p><a class="reference external" href="https://metacat.readthedocs.io/en/latest/index.html">https://metacat.readthedocs.io/en/latest/index.html</a></p>
 <p>metacat is a <cite>ups</cite> product so you can get it by</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span> /cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
-setup python v3_9_2  <span class="c1"># this avoids system python which may be very old</span>
-setup metacat
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>/cvmfs/dune.opensciencegrid.org/products/dune/setup_dune.sh
+setup<span class="w"> </span>python<span class="w"> </span>v3_9_2<span class="w">  </span><span class="c1"># this avoids system python which may be very old</span>
+setup<span class="w"> </span>metacat
 </pre></div>
 </div>
 <p>but you can also do a local install using:</p>
 <p><a class="reference external" href="https://metacat.readthedocs.io/en/latest/ui.html#installation">https://metacat.readthedocs.io/en/latest/ui.html#installation</a></p>
 <p>Make certain you can point to the metacat server:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">METACAT_AUTH_SERVER_URL</span><span class="o">=</span>https://metacat.fnal.gov:8143/auth/dune
-<span class="nb">export</span> <span class="nv">METACAT_SERVER_URL</span><span class="o">=</span>https://metacat.fnal.gov:9443/dune_meta_demo/app
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">METACAT_AUTH_SERVER_URL</span><span class="o">=</span>https://metacat.fnal.gov:8143/auth/dune
+<span class="nb">export</span><span class="w"> </span><span class="nv">METACAT_SERVER_URL</span><span class="o">=</span>https://metacat.fnal.gov:9443/dune_meta_demo/app
 </pre></div>
 </div>
 <p>Then authenticate to metacat:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat auth login -m password <span class="nv">$USER</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat<span class="w"> </span>auth<span class="w"> </span>login<span class="w"> </span>-m<span class="w"> </span>password<span class="w"> </span><span class="nv">$USER</span>
 Password:
-User:    schellma
-Expires: Thu Oct <span class="m">13</span> <span class="m">16</span>:27:29 <span class="m">2022</span>
+User:<span class="w">    </span>schellma
+Expires:<span class="w"> </span>Thu<span class="w"> </span>Oct<span class="w"> </span><span class="m">13</span><span class="w"> </span><span class="m">16</span>:27:29<span class="w"> </span><span class="m">2022</span>
 </pre></div>
 </div>
 <p><em>Note: you can also authenticate via other methods, for example</em></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span> <span class="nv">X509_USER_PROXY</span><span class="o">=</span>/tmp/x509up_u1327
-<span class="nb">export</span> <span class="nv">X509_USER_KEY</span><span class="o">=</span><span class="nv">$X509_USER_PROXY</span>
-metacat auth login -m x509 <span class="nv">$USER</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">X509_USER_PROXY</span><span class="o">=</span>/tmp/x509up_u1327
+<span class="nb">export</span><span class="w"> </span><span class="nv">X509_USER_KEY</span><span class="o">=</span><span class="nv">$X509_USER_PROXY</span>
+metacat<span class="w"> </span>auth<span class="w"> </span>login<span class="w"> </span>-m<span class="w"> </span>x509<span class="w"> </span><span class="nv">$USER</span>
 </pre></div>
 </div>
 </div>
@@ -84,7 +84,7 @@ metacat auth login -m x509 <span class="nv">$USER</span>
 <h2>Example: Get the raw data from given protodune-sp detector runs<a class="headerlink" href="#example-get-the-raw-data-from-given-protodune-sp-detector-runs" title="Permalink to this heading">¶</a></h2>
 <ul>
 <li><p>samweb</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>samweb list-files <span class="s2">&quot;file_type detector and run_type &#39;protodune-sp&#39;\</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>samweb<span class="w"> </span>list-files<span class="w"> </span><span class="s2">&quot;file_type detector and run_type &#39;protodune-sp&#39;\</span>
 <span class="s2"> and data_tier raw and data_stream physics and run_number 5141,5143&quot;</span>
 </pre></div>
 </div>
@@ -92,7 +92,7 @@ metacat auth login -m x509 <span class="nv">$USER</span>
 </li>
 <li><p>metacat</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat query <span class="s2">&quot;files from dune:all where core.file_type=detector \</span>
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat<span class="w"> </span>query<span class="w"> </span><span class="s2">&quot;files from dune:all where core.file_type=detector \</span>
 <span class="s2"> and core.run_type=&#39;protodune-sp&#39; and core.data_tier=raw \</span>
 <span class="s2"> and core.data_stream=physics and core.runs[any] in (5141,5413)&quot;</span>
 </pre></div>
@@ -117,14 +117,14 @@ metacat auth login -m x509 <span class="nv">$USER</span>
 <ul>
 <li><p><em>samweb</em></p>
 <p>in sam you save a definition, which is the query</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>samweb create-definition schellma-protodune-sp-physics-generic <span class="se">\</span>
-<span class="s2">&quot;file_type detector and run_type &#39;protodune-sp&#39; and data_stream physics&quot;</span> <span class="sb">`</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>samweb<span class="w"> </span>create-definition<span class="w"> </span>schellma-protodune-sp-physics-generic<span class="w"> </span><span class="se">\</span>
+<span class="s2">&quot;file_type detector and run_type &#39;protodune-sp&#39; and data_stream physics&quot;</span><span class="w"> </span><span class="sb">`</span>
 </pre></div>
 </div>
 <p>You can then ask for:</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>samweb list-files <span class="s2">&quot;defname:schellma-protodune-sp-physics-generic \</span>
-<span class="s2"> and data_tier raw and run_number 5141&quot;</span> --summary
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>samweb<span class="w"> </span>list-files<span class="w"> </span><span class="s2">&quot;defname:schellma-protodune-sp-physics-generic \</span>
+<span class="s2"> and data_tier raw and run_number 5141&quot;</span><span class="w"> </span>--summary
 </pre></div>
 </div>
 </div></blockquote>
@@ -134,42 +134,42 @@ metacat auth login -m x509 <span class="nv">$USER</span>
 <li><p>metacat</p>
 <p>To run a MQL query and create a new dataset with the query results:</p>
 <blockquote>
-<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat dataset create -f <span class="s2">&quot;files from dune:all where \</span>
-<span class="s2">...&quot;</span> &lt;dataset_namespace&gt;:&lt;dataset_name&gt;
+<div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat<span class="w"> </span>dataset<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span><span class="s2">&quot;files from dune:all where \</span>
+<span class="s2">...&quot;</span><span class="w"> </span>&lt;dataset_namespace&gt;:&lt;dataset_name&gt;
 </pre></div>
 </div>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat dataset create -f @file_with_mql_query.txt <span class="se">\</span>
-&lt;dataset_namespace&gt;:&lt;dataset_name&gt; &lt;dataset description&gt;
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat<span class="w"> </span>dataset<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>@file_with_mql_query.txt<span class="w"> </span><span class="se">\</span>
+&lt;dataset_namespace&gt;:&lt;dataset_name&gt;<span class="w"> </span>&lt;dataset<span class="w"> </span>description&gt;
 </pre></div>
 </div>
 </div></blockquote>
 <p>To run a query and add matching files to an existing dataset:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat dataset add-files -q <span class="s2">&quot;files from dune:all where ...&quot;</span> &lt;dataset_namespace&gt;:&lt;dataset_name&gt;
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat<span class="w"> </span>dataset<span class="w"> </span>add-files<span class="w"> </span>-q<span class="w"> </span><span class="s2">&quot;files from dune:all where ...&quot;</span><span class="w"> </span>&lt;dataset_namespace&gt;:&lt;dataset_name&gt;
 
-metacat dataset add-files -q @file_with_mql_query.txt &lt;dataset_namespace&gt;:&lt;dataset_name&gt;
+metacat<span class="w"> </span>dataset<span class="w"> </span>add-files<span class="w"> </span>-q<span class="w"> </span>@file_with_mql_query.txt<span class="w"> </span>&lt;dataset_namespace&gt;:&lt;dataset_name&gt;
 </pre></div>
 </div>
 <p>check it by querying the files in the dataset</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat query -s <span class="s2">&quot;files from schellma:protodune-sp-physics-generic&quot;</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat<span class="w"> </span>query<span class="w"> </span>-s<span class="w"> </span><span class="s2">&quot;files from schellma:protodune-sp-physics-generic&quot;</span>
 
-metacat dataset show schellma:protodune-sp-physics-generic
+metacat<span class="w"> </span>dataset<span class="w"> </span>show<span class="w"> </span>schellma:protodune-sp-physics-generic
 
-children                 :
-created_timestamp        : <span class="m">2022</span>-10-08 <span class="m">11</span>:41:54
-creator                  : schellma
-description              : files from dune:all where core.file_type<span class="o">=</span>detector and core.run_type<span class="o">=</span><span class="s1">&#39;protodune-sp&#39;</span> and core.data_stream<span class="o">=</span>physics
-file_count               : <span class="m">772631</span>
-file_meta_requirements   : <span class="o">{}</span>
-frozen                   : False
-metadata                 : <span class="o">{}</span>
-monotonic                : False
-name                     : protodune-sp-physics-generic
-namespace                : schellma
-parents                  :
+children<span class="w">                 </span>:
+created_timestamp<span class="w">        </span>:<span class="w"> </span><span class="m">2022</span>-10-08<span class="w"> </span><span class="m">11</span>:41:54
+creator<span class="w">                  </span>:<span class="w"> </span>schellma
+description<span class="w">              </span>:<span class="w"> </span>files<span class="w"> </span>from<span class="w"> </span>dune:all<span class="w"> </span>where<span class="w"> </span>core.file_type<span class="o">=</span>detector<span class="w"> </span>and<span class="w"> </span>core.run_type<span class="o">=</span><span class="s1">&#39;protodune-sp&#39;</span><span class="w"> </span>and<span class="w"> </span>core.data_stream<span class="o">=</span>physics
+file_count<span class="w">               </span>:<span class="w"> </span><span class="m">772631</span>
+file_meta_requirements<span class="w">   </span>:<span class="w"> </span><span class="o">{}</span>
+frozen<span class="w">                   </span>:<span class="w"> </span>False
+metadata<span class="w">                 </span>:<span class="w"> </span><span class="o">{}</span>
+monotonic<span class="w">                </span>:<span class="w"> </span>False
+name<span class="w">                     </span>:<span class="w"> </span>protodune-sp-physics-generic
+namespace<span class="w">                </span>:<span class="w"> </span>schellma
+parents<span class="w">                  </span>:
 </pre></div>
 </div>
 <p>You can then ask for the subset from a particular data tier and run number.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat query <span class="s2">&quot;files from schellma:protodune-sp-physics-generic \</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat<span class="w"> </span>query<span class="w"> </span><span class="s2">&quot;files from schellma:protodune-sp-physics-generic \</span>
 <span class="s2">where core.runs[all]=5141 and core.data_tier=raw&quot;</span>
 </pre></div>
 </div>
@@ -180,24 +180,24 @@ parents                  :
 <h2>Find only the files not processed with a version of code<a class="headerlink" href="#find-only-the-files-not-processed-with-a-version-of-code" title="Permalink to this heading">¶</a></h2>
 <ul>
 <li><p>samweb</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>samweb list-files <span class="s2">&quot;defname:schellma-protodune-sp-physics-generic \</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>samweb<span class="w"> </span>list-files<span class="w"> </span><span class="s2">&quot;defname:schellma-protodune-sp-physics-generic \</span>
 <span class="s2"> and data_tier raw and run_number 5141 minus \</span>
 <span class="s2"> isparentof:(defname:schellma-protodune-sp-physics-generic\</span>
-<span class="s2">  and data_tier &#39;full-reconstructed&#39;  and run_number 5141 and version v08_27_% )&quot;</span> --summary
+<span class="s2">  and data_tier &#39;full-reconstructed&#39;  and run_number 5141 and version v08_27_% )&quot;</span><span class="w"> </span>--summary
 
-File count: <span class="m">12</span>
-Total size: <span class="m">95354212618</span>
-Event count:        <span class="m">1241</span>
+File<span class="w"> </span>count:<span class="w"> </span><span class="m">12</span>
+Total<span class="w"> </span>size:<span class="w"> </span><span class="m">95354212618</span>
+Event<span class="w"> </span>count:<span class="w">        </span><span class="m">1241</span>
 </pre></div>
 </div>
 </li>
 <li><p>metacat</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat query -s <span class="s2">&quot;files from schellma:protodune-sp-physics-generic \</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>metacat<span class="w"> </span>query<span class="w"> </span>-s<span class="w"> </span><span class="s2">&quot;files from schellma:protodune-sp-physics-generic \</span>
 <span class="s2">where core.data_tier=raw and 5141 in core.runs -  parents(files \</span>
 <span class="s2">from schellma:protodune-sp-physics-generic where 5141 in core.runs \</span>
 <span class="s2">and core.data_tier=&#39;full-reconstructed&#39; and core.application.version~&#39;v08_27_.*&#39;)&quot;</span>
 
-<span class="m">12</span> files
+<span class="m">12</span><span class="w"> </span>files
 </pre></div>
 </div>
 </li>
