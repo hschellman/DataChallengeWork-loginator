@@ -370,7 +370,7 @@ class DDInterface:
       else:
         lines.append('{"did":"%s:%s"}\n'%(f['namespace'], f['name']))
 
-    with open('loaded_files.txt', 'w') as f:
+    with open('%s_loaded_files.txt'%(os.getenv("MYWORKERID")), 'w') as f:
       f.writelines(lines)
 
   def SetWorkerID(self):

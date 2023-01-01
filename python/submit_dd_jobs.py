@@ -40,6 +40,7 @@ def create_project(dataset=None, namespace = None, query_limit=None, query_skip=
 
   #make project in data dispatcher
   proj_dict = dd_client.create_project(query_files, query=query)
+  if debug: print("project dictionary",proj_dict)
   dd_proj_id = proj_dict['project_id']
   print('Project ID:', dd_proj_id)
 
