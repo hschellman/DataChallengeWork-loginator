@@ -14,6 +14,8 @@ API
 
         submit_dd_jobs
 
+Dependencies
+------------
 
 .. figure:: ../DDInterface.jpg
        :scale: 100 %

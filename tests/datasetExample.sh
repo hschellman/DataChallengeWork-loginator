@@ -1,3 +1,5 @@
+# some example metacat queries and dataset creations
+
 metacat query "files from dune:all where namespace=np04_pdspprod2_reco and core.file_type=detector and core.run_type='protodune-sp' and \
 core.data_tier=full-reconstructed and core.data_stream=physics and core.runs[any] in (5141)"
 
@@ -6,7 +8,7 @@ core.data_tier=full-reconstructed and core.data_stream=physics and core.runs[any
 
 samweb list-files --summary "run_type=protodune-sp and file_type=mc and data_tier=full-reconstructed and DUNE_MC.beam_energy=1.0 and DUNE.Campaign=PDSPProd4a"
 
-metacat query "files from dune:all where namespace='pdsp_mc_reco' and core.file_type=mc and core.data_tier='full_reconstructed' and 
+metacat query "files from dune:all where namespace='pdsp_mc_reco' and core.file_type=mc and core.data_tier='full_reconstructed' and
 
 metacat query  "files from dune:all where namespace='pdsp_mc_reco' and core.file_type=mc and core.data_tier='full-reconstructed' and DUNE.campaign=PDSPProd4a and MC.space_charge=yes"
 
