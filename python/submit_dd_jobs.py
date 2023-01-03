@@ -6,7 +6,7 @@ from data_dispatcher.api import DataDispatcherClient
 from argparse import ArgumentParser as ap
 import subprocess
 
-def create_project(dataset=None, namespace = None, query_limit=None, query_skip=None, debug=False):
+def create_project(dataset=None, query=None, namespace = None, query_limit=None, query_skip=None, debug=False):
   mc_client = MetaCatClient('https://metacat.fnal.gov:9443/dune_meta_demo/app')
   dd_client = DataDispatcherClient(
     server_url='https://metacat.fnal.gov:9443/dune/dd/data',
@@ -14,18 +14,28 @@ def create_project(dataset=None, namespace = None, query_limit=None, query_skip=
   dd_client.login_x509(os.environ['USER'],
                        os.environ['X509_USER_PROXY'])
 
-  if namespace != None:
-      query = 'files from %s where namespace="%s" ordered'%(dataset, namespace)
-  else:
-      query = 'files from %s ordered'%(dataset)
 
-  if query_skip: query += ' skip %s'%query_skip
-  if query_limit: query += ' limit %s'%query_limit
+  if (query != None and dataset != None):
+      print ("Choose between query and dataset please")
+      sys.exit(1)
+  thequery = ""
+  if query == None:
+      if namespace != None:
+          thequery = 'files from %s where namespace="%s" ordered'%(dataset, namespace)
+      else:
+          thequery = 'files from %s ordered'%(dataset)
+  else:
+      thequery +=  query + " ordered "
+
+  print (thequery)
+
+  if query_skip: thequery += ' skip %s'%query_skip
+  if query_limit: thequery += ' limit %s'%query_limit
 
   print("------------------------createproject------------------------------")
-  print("Start Project for :",query)
+  print("Start Project for :",thequery)
   #query metacat
-  query_files = list(mc_client.query(query))
+  query_files = list(mc_client.query(thequery))
 
   if debug: print("create_project with", len(query_files), " files")
 
@@ -33,11 +43,11 @@ def create_project(dataset=None, namespace = None, query_limit=None, query_skip=
   nfiles_in_dataset = len(query_files)
   if nfiles_in_dataset == 0:
     sys.stderr.write("Ignoring launch request on empty metacat query")
-    sys.stderr.write("Query: %s"%query)
+    sys.stderr.write("Query: %s"%thequery)
     sys.exit(1)
 
   #make project in data dispatcher
-  proj_dict = dd_client.create_project(files=query_files, query=query)
+  proj_dict = dd_client.create_project(files=query_files, query=thequery)
   if debug: print("project dictionary",proj_dict)
   dd_proj_id = proj_dict['project_id']
   print('Project ID:', dd_proj_id)

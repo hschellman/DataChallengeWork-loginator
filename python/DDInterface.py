@@ -80,7 +80,7 @@ def call_and_retry_return(func):
 class DDInterface:
   ''' Interface to the Data Dispatcher
   '''
-  def __init__(self, debug=False, dataset=None, namespace=None, lar_limit=0, timeout=120, wait_time=60, wait_limit=5,\
+  def __init__(self, debug=False, dataset=None, query=None, namespace=None, lar_limit=0, timeout=120, wait_time=60, wait_limit=5,\
    appFamily=None, appName=None, appVersion=None, dataTier=None, dataStream=None, workflowMethod="dd"):
     '''
     Main interface for the data Dispatcher
@@ -458,6 +458,7 @@ def driver(args):
                              workflowMethod=args.workflowMethod,
                              namespace=args.namespace,
                              dataset=args.dataset,
+                             query=args.query,
                              debug=args.debug,
                              dataTier=args.dataTier,
                              dataStream=args.dataStream)
@@ -474,15 +475,16 @@ def driver(args):
 
 if __name__ == '__main__':
     ''' run_lar
-    .. cmdoption:: --dataset <dataset>
+
     '''
     parser = ap()
     # dd args
-    parser.add_argument('--dataset', default='schellma:run5141recentReco',type=str)
+    parser.add_argument('--dataset', default=None, type=str, help="run over a metacat dataset")
+    parser.add_argument('--query', default=None, type=str, help="full metacat query instead of fixed dataset")
     parser.add_argument('--load_limit', default=1, type=int,help='number of files to give to lar')
     parser.add_argument('--namespace', default=None, type=str, help="optional namespace qualifier for dataset")
-    parser.add_argument('--query_limit', default=10)
-    parser.add_argument('--query_skip', default=10)
+    parser.add_argument('--query_limit', default=10, type=int, help="number of files for project to run over")
+    parser.add_argument('--query_skip', default=10, type=int, help="number of files to skip in the ordered dataset or query")
     parser.add_argument('--projectID', default=None, type=int, help="dd projectID, overrides dataset")
     parser.add_argument('--timeout', type=int, default=120)
     parser.add_argument('--wait_time', type=int, default=120)
@@ -510,18 +512,18 @@ if __name__ == '__main__':
     print ("DDInterface arguments:\n")
     theargs = vars(args)
     for a in theargs:
-        print(a,theargs[a])
+        print(a,"=",theargs[a])
     print ("-----------------------------------------------------------------------------------")
 
-    if (not args.projectID) and args.dataset:
-        dd_proj_id = submit_dd_jobs.create_project(dataset=args.dataset, namespace=args.namespace,
+    if (not args.projectID) and (args.dataset or args.query):
+        dd_proj_id = submit_dd_jobs.create_project(dataset=args.dataset, query=args.query, namespace=args.namespace,
                                   query_limit=args.query_limit,
                                   query_skip=args.query_skip,debug=args.debug)
 
     elif args.projectID:
         dd_proj_id = int(args.projectID)
     else:
-        print("Need to provide project OR dataset\n")
+        print("Need to provide a projectID to rejoin OR dataset OR query \n")
         sys.exit(1)
 
     retcode = driver(args)
