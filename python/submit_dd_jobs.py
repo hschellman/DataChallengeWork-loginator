@@ -25,11 +25,9 @@ def create_project(dataset=None, namespace = None, query_limit=None, query_skip=
   print("------------------------createproject------------------------------")
   print("Start Project for :",query)
   #query metacat
-  print (mc_client.query(query))
-  print ("those were the files")
-  query_files = [i for i in mc_client.query(query)]
+  query_files = list(mc_client.query(query))
 
-  if debug: print("create_project files",len(query_files))
+  if debug: print("create_project with", len(query_files), " files")
 
   #check size
   nfiles_in_dataset = len(query_files)
@@ -39,7 +37,7 @@ def create_project(dataset=None, namespace = None, query_limit=None, query_skip=
     sys.exit(1)
 
   #make project in data dispatcher
-  proj_dict = dd_client.create_project(query_files, query=query)
+  proj_dict = dd_client.create_project(files=query_files, query=query)
   if debug: print("project dictionary",proj_dict)
   dd_proj_id = proj_dict['project_id']
   print('Project ID:', dd_proj_id)

@@ -1,2 +1,1 @@
-tar -cvf ../loginator.tar tests/*.sh batch/* python/*.py fcl/*.fcl
-
+tar -cvf ../larwrapper.tar tests/*.sh batch/* python/*.py fcl/*.fcl

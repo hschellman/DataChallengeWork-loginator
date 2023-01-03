@@ -390,7 +390,8 @@ class Loginator:
         format = "%d-%b-%Y %H:%M:%S"
         # python no longer accepts time zones.  We only want the different but need to correct for DT
         #print ("human2number converting",stamp)
-        thetime  = datetime.strptime(stamp[0:19],format)
+        if self.debug: print ("raw time", stamp, stamp[0:20], datetime.strptime(stamp[0:20],format))
+        thetime  = datetime.strptime(stamp[0:20],format)
         epoch = datetime.utcfromtimestamp(0)
         if "DT" in stamp:
             stamp += 3600
@@ -400,6 +401,7 @@ class Loginator:
     def duration(self,start,end):
         t0 = self.human2number(start)
         t1 = self.human2number(end)
+        if self.debug: print("duration", start, end, t0, t1, t1-t0)
         return t1-t0
 
 

@@ -1,4 +1,4 @@
-export DWORK=dunegpvm03.fnal.gov:/dune/data/users/schellma/DataChallengeWork-loginator/
+export DWORK=dunegpvm03.fnal.gov:/dune/data/users/schellma/LArWrapper
 scp *.sh $DWORK
 scp tests/*.sh $DWORK/tests/.
 scp batch/* $DWORK/batch/.
