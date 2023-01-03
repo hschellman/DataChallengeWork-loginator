@@ -4,7 +4,7 @@ Usage
 Installation
 ------------
 
-To use Loginator, first install this package, and `metacat <https://metacat.readthedocs.io/en/latest/>`_ and `data dispatcher <https://data-dispatcher.readthedocs.io/en/latest/>`_ from github (or ups).
+To use LArWrapper, first install this package from github, and `metacat <https://metacat.readthedocs.io/en/latest/>`_ and `data dispatcher <https://data-dispatcher.readthedocs.io/en/latest/>`_ from github (or ups).
 
 
 Then run `setup_hms` after modifying for your own user.

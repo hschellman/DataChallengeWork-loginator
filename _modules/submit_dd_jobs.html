@@ -47,7 +47,7 @@
 <span class="kn">from</span> <span class="nn">argparse</span> <span class="kn">import</span> <span class="n">ArgumentParser</span> <span class="k">as</span> <span class="n">ap</span>
 <span class="kn">import</span> <span class="nn">subprocess</span>
 
-<div class="viewcode-block" id="create_project"><a class="viewcode-back" href="../Modules.html#submit_dd_jobs.create_project">[docs]</a><span class="k">def</span> <span class="nf">create_project</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">namespace</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">query_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">query_skip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="create_project"><a class="viewcode-back" href="../Modules.html#submit_dd_jobs.create_project">[docs]</a><span class="k">def</span> <span class="nf">create_project</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">namespace</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">query_limit</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">query_skip</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
   <span class="n">mc_client</span> <span class="o">=</span> <span class="n">MetaCatClient</span><span class="p">(</span><span class="s1">&#39;https://metacat.fnal.gov:9443/dune_meta_demo/app&#39;</span><span class="p">)</span>
   <span class="n">dd_client</span> <span class="o">=</span> <span class="n">DataDispatcherClient</span><span class="p">(</span>
     <span class="n">server_url</span><span class="o">=</span><span class="s1">&#39;https://metacat.fnal.gov:9443/dune/dd/data&#39;</span><span class="p">,</span>
@@ -55,18 +55,28 @@
   <span class="n">dd_client</span><span class="o">.</span><span class="n">login_x509</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;USER&#39;</span><span class="p">],</span>
                        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;X509_USER_PROXY&#39;</span><span class="p">])</span>
 
-  <span class="k">if</span> <span class="n">namespace</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
-      <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;files from </span><span class="si">%s</span><span class="s1"> where namespace=&quot;</span><span class="si">%s</span><span class="s1">&quot; ordered&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">namespace</span><span class="p">)</span>
-  <span class="k">else</span><span class="p">:</span>
-      <span class="n">query</span> <span class="o">=</span> <span class="s1">&#39;files from </span><span class="si">%s</span><span class="s1"> ordered&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
 
-  <span class="k">if</span> <span class="n">query_skip</span><span class="p">:</span> <span class="n">query</span> <span class="o">+=</span> <span class="s1">&#39; skip </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">query_skip</span>
-  <span class="k">if</span> <span class="n">query_limit</span><span class="p">:</span> <span class="n">query</span> <span class="o">+=</span> <span class="s1">&#39; limit </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">query_limit</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">query</span> <span class="o">!=</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">dataset</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">):</span>
+      <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;Choose between query and dataset please&quot;</span><span class="p">)</span>
+      <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+  <span class="n">thequery</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+  <span class="k">if</span> <span class="n">query</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+      <span class="k">if</span> <span class="n">namespace</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">:</span>
+          <span class="n">thequery</span> <span class="o">=</span> <span class="s1">&#39;files from </span><span class="si">%s</span><span class="s1"> where namespace=&quot;</span><span class="si">%s</span><span class="s1">&quot; ordered&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">namespace</span><span class="p">)</span>
+      <span class="k">else</span><span class="p">:</span>
+          <span class="n">thequery</span> <span class="o">=</span> <span class="s1">&#39;files from </span><span class="si">%s</span><span class="s1"> ordered&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+  <span class="k">else</span><span class="p">:</span>
+      <span class="n">thequery</span> <span class="o">+=</span>  <span class="n">query</span> <span class="o">+</span> <span class="s2">&quot; ordered &quot;</span>
+
+  <span class="nb">print</span> <span class="p">(</span><span class="n">thequery</span><span class="p">)</span>
+
+  <span class="k">if</span> <span class="n">query_skip</span><span class="p">:</span> <span class="n">thequery</span> <span class="o">+=</span> <span class="s1">&#39; skip </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">query_skip</span>
+  <span class="k">if</span> <span class="n">query_limit</span><span class="p">:</span> <span class="n">thequery</span> <span class="o">+=</span> <span class="s1">&#39; limit </span><span class="si">%s</span><span class="s1">&#39;</span><span class="o">%</span><span class="n">query_limit</span>
 
   <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;------------------------createproject------------------------------&quot;</span><span class="p">)</span>
-  <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Start Project for :&quot;</span><span class="p">,</span><span class="n">query</span><span class="p">)</span>
+  <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Start Project for :&quot;</span><span class="p">,</span><span class="n">thequery</span><span class="p">)</span>
   <span class="c1">#query metacat</span>
-  <span class="n">query_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">mc_client</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">query</span><span class="p">))</span>
+  <span class="n">query_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">mc_client</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">thequery</span><span class="p">))</span>
 
   <span class="k">if</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;create_project with&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">query_files</span><span class="p">),</span> <span class="s2">&quot; files&quot;</span><span class="p">)</span>
 
@@ -74,11 +84,11 @@
   <span class="n">nfiles_in_dataset</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">query_files</span><span class="p">)</span>
   <span class="k">if</span> <span class="n">nfiles_in_dataset</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Ignoring launch request on empty metacat query&quot;</span><span class="p">)</span>
-    <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Query: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">query</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;Query: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="o">%</span><span class="n">thequery</span><span class="p">)</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
   <span class="c1">#make project in data dispatcher</span>
-  <span class="n">proj_dict</span> <span class="o">=</span> <span class="n">dd_client</span><span class="o">.</span><span class="n">create_project</span><span class="p">(</span><span class="n">files</span><span class="o">=</span><span class="n">query_files</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+  <span class="n">proj_dict</span> <span class="o">=</span> <span class="n">dd_client</span><span class="o">.</span><span class="n">create_project</span><span class="p">(</span><span class="n">files</span><span class="o">=</span><span class="n">query_files</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">thequery</span><span class="p">)</span>
   <span class="k">if</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;project dictionary&quot;</span><span class="p">,</span><span class="n">proj_dict</span><span class="p">)</span>
   <span class="n">dd_proj_id</span> <span class="o">=</span> <span class="n">proj_dict</span><span class="p">[</span><span class="s1">&#39;project_id&#39;</span><span class="p">]</span>
   <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Project ID:&#39;</span><span class="p">,</span> <span class="n">dd_proj_id</span><span class="p">)</span>
