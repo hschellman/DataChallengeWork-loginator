@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>submit_dd_jobs &#8212; Loginator 0.1 documentation</title>
+    <title>submit_dd_jobs &#8212; LArWrapper 0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/nature.css" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Loginator 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">LArWrapper 0.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">submit_dd_jobs</a></li> 
       </ul>
@@ -77,6 +77,12 @@
   <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Start Project for :&quot;</span><span class="p">,</span><span class="n">thequery</span><span class="p">)</span>
   <span class="c1">#query metacat</span>
   <span class="n">query_files</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">mc_client</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">thequery</span><span class="p">))</span>
+  <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+  <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">query_files</span><span class="p">:</span>
+      <span class="nb">print</span> <span class="p">(</span><span class="n">i</span><span class="p">)</span>
+      <span class="n">count</span> <span class="o">+=</span><span class="mi">1</span>
+      <span class="k">if</span> <span class="n">count</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
+          <span class="k">break</span>
 
   <span class="k">if</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;create_project with&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">query_files</span><span class="p">),</span> <span class="s2">&quot; files&quot;</span><span class="p">)</span>
 
@@ -88,7 +94,7 @@
     <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
   <span class="c1">#make project in data dispatcher</span>
-  <span class="n">proj_dict</span> <span class="o">=</span> <span class="n">dd_client</span><span class="o">.</span><span class="n">create_project</span><span class="p">(</span><span class="n">files</span><span class="o">=</span><span class="n">query_files</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">thequery</span><span class="p">)</span>
+  <span class="n">proj_dict</span> <span class="o">=</span> <span class="n">dd_client</span><span class="o">.</span><span class="n">create_project</span><span class="p">(</span><span class="n">files</span><span class="o">=</span><span class="n">query_files</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">thequery</span><span class="p">,</span> <span class="n">idle_timeout</span><span class="o">=</span><span class="mi">259201</span><span class="p">)</span>
   <span class="k">if</span> <span class="n">debug</span><span class="p">:</span> <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;project dictionary&quot;</span><span class="p">,</span><span class="n">proj_dict</span><span class="p">)</span>
   <span class="n">dd_proj_id</span> <span class="o">=</span> <span class="n">proj_dict</span><span class="p">[</span><span class="s1">&#39;project_id&#39;</span><span class="p">]</span>
   <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Project ID:&#39;</span><span class="p">,</span> <span class="n">dd_proj_id</span><span class="p">)</span>
@@ -181,7 +187,7 @@
     <span class="c1">#make project in data dispatcher</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; try to create a project&quot;</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">proj_dict</span> <span class="o">=</span> <span class="n">dd_client</span><span class="o">.</span><span class="n">create_project</span><span class="p">(</span><span class="n">query_files</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">)</span>
+        <span class="n">proj_dict</span> <span class="o">=</span> <span class="n">dd_client</span><span class="o">.</span><span class="n">create_project</span><span class="p">(</span><span class="n">query_files</span><span class="p">,</span> <span class="n">query</span><span class="o">=</span><span class="n">query</span><span class="p">,)</span>
     <span class="k">except</span><span class="p">:</span>
         <span class="nb">print</span> <span class="p">(</span><span class="s2">&quot;project creation failed, give up&quot;</span><span class="p">)</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
@@ -271,7 +277,7 @@
         <li class="right" >
           <a href="../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="../index.html">Loginator 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">LArWrapper 0.1 documentation</a> &#187;</li>
           <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">submit_dd_jobs</a></li> 
       </ul>

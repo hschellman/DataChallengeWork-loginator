@@ -5,7 +5,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DDInterface tests &#8212; Loginator 0.1 documentation</title>
+    <title>DDInterface tests &#8212; LArWrapper 0.1 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/nature.css" />
     <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
@@ -27,7 +27,7 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Loginator 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">LArWrapper 0.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">DDInterface tests</a></li> 
       </ul>
     </div>  
@@ -46,7 +46,7 @@
 <blockquote>
 <div><div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># run an interactive test HMS 12-2-2022</span>
 <span class="nb">export</span><span class="w"> </span><span class="nv">BEGIN_TIME</span><span class="o">=</span><span class="sb">`</span>date<span class="w"> </span>+<span class="s2">&quot;%d-%b-%Y %H:%M:%S %Z&quot;</span><span class="sb">`</span>
-python<span class="w"> </span>-m<span class="w"> </span>DDInterface<span class="w"> </span>--debug<span class="o">=</span>True<span class="w"> </span>--dataset<span class="w"> </span>schellma:run5141recentReco<span class="w">  </span>--query_limit<span class="w"> </span><span class="m">10</span><span class="w"> </span>--load_limit<span class="w"> </span><span class="m">1</span><span class="w"> </span>-c<span class="w"> </span>fcl/test.fcl<span class="w"> </span>--user<span class="w"> </span><span class="nv">$USER</span><span class="w"> </span>--appFamily<span class="o">=</span>protoduneana<span class="w"> </span>--appName<span class="o">=</span><span class="nb">test</span><span class="w"> </span>--appVersion<span class="o">=</span><span class="nv">$PROTODUNEANA_VERSION</span><span class="w">  </span>-n<span class="w"> </span><span class="m">2</span>
+python<span class="w"> </span>-m<span class="w"> </span>DDInterface<span class="w"> </span>--debug<span class="o">=</span>True<span class="w"> </span>--dataset<span class="w"> </span>schellma:PDSPProd4a_mc_1GeV_sce<span class="w"> </span>--workflowMethod<span class="o">=</span>interactive<span class="w"> </span>--query_limit<span class="w"> </span><span class="m">10</span><span class="w"> </span>--load_limit<span class="w"> </span><span class="m">1</span><span class="w"> </span>-c<span class="w"> </span>fcl/test.fcl<span class="w"> </span>--user<span class="w"> </span><span class="nv">$USER</span><span class="w"> </span>--appFamily<span class="o">=</span>protoduneana<span class="w"> </span>--appName<span class="o">=</span><span class="nb">test</span><span class="w"> </span>--appVersion<span class="o">=</span><span class="nv">$PROTODUNEANA_VERSION</span><span class="w">  </span>-n<span class="w"> </span><span class="m">2</span>
 <span class="c1"># this does a minimal test reading n=20 events from load_limit=1 files</span>
 </pre></div>
 </div>
@@ -54,7 +54,7 @@ python<span class="w"> </span>-m<span class="w"> </span>DDInterface<span class="
 <p>Example <cite>tests/rejoin.sh</cite> rejoins an existing delivery project (projectID) and continues to process it</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># run an interactive test HMS 12-2-2022</span>
 <span class="nb">export</span><span class="w"> </span><span class="nv">BEGIN_TIME</span><span class="o">=</span><span class="sb">`</span>date<span class="w">  </span>+<span class="s2">&quot;%d-%b-%Y %H:%M:%S %Z&quot;</span><span class="sb">`</span>
-python<span class="w"> </span>-m<span class="w">  </span>DDInterface<span class="w"> </span>--projectID<span class="o">=</span><span class="m">385</span><span class="w">  </span>--load_limit<span class="w"> </span><span class="m">2</span><span class="w"> </span>-c<span class="w"> </span>eventdump.fcl<span class="w"> </span>--user<span class="w"> </span><span class="nv">$USER</span><span class="w"> </span>--workflowMethod<span class="o">=</span><span class="s2">&quot;interactive&quot;</span><span class="w"> </span>--appFamily<span class="o">=</span>protoduneana<span class="w">  </span>--appName<span class="o">=</span>eventdump<span class="w"> </span>--appVersion<span class="o">=</span><span class="nv">$PROTODUNEANA_VERSION</span><span class="w">  </span>-n<span class="w"> </span><span class="m">10</span>
+python<span class="w"> </span>-m<span class="w">  </span>DDInterface<span class="w"> </span>--projectID<span class="o">=</span><span class="m">403</span><span class="w">  </span>--load_limit<span class="w"> </span><span class="m">1</span><span class="w"> </span>-c<span class="w"> </span>fcl/test.fcl<span class="w"> </span>--user<span class="w"> </span><span class="nv">$USER</span><span class="w"> </span>--workflowMethod<span class="o">=</span><span class="s2">&quot;interactive&quot;</span><span class="w"> </span>--appFamily<span class="o">=</span>protoduneana<span class="w">  </span>--appName<span class="o">=</span><span class="nb">test</span><span class="w"> </span>--appVersion<span class="o">=</span><span class="nv">$PROTODUNEANA_VERSION</span><span class="w">  </span>-n<span class="w"> </span><span class="m">2</span>
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">DDInterface</span> <span class="o">--</span><span class="n">help</span>
@@ -174,7 +174,7 @@ python<span class="w"> </span>-m<span class="w"> </span>submit_dd_jobs<span clas
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Loginator 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">LArWrapper 0.1 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">DDInterface tests</a></li> 
       </ul>
     </div>
