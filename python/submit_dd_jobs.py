@@ -36,6 +36,12 @@ def create_project(dataset=None, query=None, namespace = None, query_limit=None,
   print("Start Project for :",thequery)
   #query metacat
   query_files = list(mc_client.query(thequery))
+  count = 0
+  for i in query_files:
+      print (i)
+      count +=1
+      if count > 100:
+          break
 
   if debug: print("create_project with", len(query_files), " files")
 
@@ -47,7 +53,7 @@ def create_project(dataset=None, query=None, namespace = None, query_limit=None,
     sys.exit(1)
 
   #make project in data dispatcher
-  proj_dict = dd_client.create_project(files=query_files, query=thequery)
+  proj_dict = dd_client.create_project(files=query_files, query=thequery, idle_timeout=259201)
   if debug: print("project dictionary",proj_dict)
   dd_proj_id = proj_dict['project_id']
   print('Project ID:', dd_proj_id)
@@ -140,7 +146,7 @@ def main():
     #make project in data dispatcher
     print(" try to create a project")
     try:
-        proj_dict = dd_client.create_project(query_files, query=query)
+        proj_dict = dd_client.create_project(query_files, query=query,)
     except:
         print ("project creation failed, give up")
         sys.exit(1)

@@ -122,9 +122,9 @@ done
 
 echo $NAMESPACE
 
-logname=loginator-${NAMESPACE}_${PROCESS}_${CLUSTER}_`date +%F_%H_%M_%S`
+logname=larwrapper-${NAMESPACE}_${PROCESS}_${CLUSTER}_`date +%F_%H_%M_%S`
 
-export PYTHONPATH=${CONDOR_DIR_INPUT}/loginator/python:${PYTHONPATH}
+export PYTHONPATH=${CONDOR_DIR_INPUT}/larwrapper/python:${PYTHONPATH}
 
 ###Setting up dunesw/Data Dispatcher/MetaCat and running lar
 (
@@ -156,8 +156,8 @@ echo "the input directory"
 ls -lrtR $CONDOR_DIR_INPUT
 export IFDH_DEBUG=0
 
-export FHICL_FILE_PATH=${CONDOR_DIR_INPUT}/loginator/fcl:${FHICL_FILE_PATH}
-export FHICL_FILE_PATH=${CONDOR_DIR_INPUT}/loginator:${FHICL_FILE_PATH}
+export FHICL_FILE_PATH=${CONDOR_DIR_INPUT}/larwrapper/fcl:${FHICL_FILE_PATH}
+export FHICL_FILE_PATH=${CONDOR_DIR_INPUT}/larwrapper:${FHICL_FILE_PATH}
 
 echo "fcl path:", $FHICL_FILE_PATH
 

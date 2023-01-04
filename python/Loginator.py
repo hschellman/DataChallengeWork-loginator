@@ -258,11 +258,12 @@ class Loginator:
             if memdata != None: object[thing]["art_real_memory"]=memdata
             if walldata != None: object[thing]["art_wall_time"]=walldata
             if cpudata != None: object[thing]["art_cpu_time"]=cpudata
-            if totalevents != None: object[thing]["art_total_events"]=totalevents
-            if totalevents > 0:
-                object[thing]["art_cpu_time_per_event"] = cpudata/totalevents
-                object[thing]["art_wall_time_per_event"] = walldata/totalevents
-            if walldata > 0:
+            if totalevents != None:
+                object[thing]["art_total_events"]=totalevents
+                if totalevents > 0:
+                    object[thing]["art_cpu_time_per_event"] = cpudata/totalevents
+                    object[thing]["art_wall_time_per_event"] = walldata/totalevents
+            if walldata  != None and walldata > 0:
                 object[thing]["art_cpu_efficiency"] = cpudata/walldata
 
             #print ("mem",object[thing]["real_memory"])
@@ -360,7 +361,10 @@ class Loginator:
             for f in self.outobject:
                 if f == r["name"]:
                     if self.debug: print ("replica match",r)
-                    found = True
+                    if self.outobject[f]["final_state"] in ["Closed"]:
+                        found = True
+                    else:
+                        print ("File found but not closed, flag as failed",f)
                     if "rse" in r:
                         self.outobject[f]["rse"] = r["rse"]
                     if "namespace" in r:

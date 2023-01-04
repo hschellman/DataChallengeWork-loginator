@@ -202,10 +202,12 @@ class DDInterface:
         site = os.getenv("HOSTNAME")
     else:
         site = None
-    print ('looking for files near',site)
+
     # want to add cpu_site
+
+    print ('looking for files near',site)
     self.next_output = self.dd_client.next_file(
-        self.proj_id, timeout=self.dd_timeout,
+        self.proj_id, timeout=self.dd_timeout,cpu_site=site,
         worker_id=os.environ['MYWORKERID'])
     print("next_file ",self.next_output,datetime.datetime.now())
 

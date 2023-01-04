@@ -31,7 +31,7 @@ print ("PATH",sys.path)
 
 # -- Project information -----------------------------------------------------
 
-project = 'Loginator'
+project = 'LArWrapper'
 copyright = '2022, Oregon State University'
 author = 'Heidi Schellman and Jacob Calcutt'
 
